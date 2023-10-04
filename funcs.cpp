@@ -26,3 +26,24 @@ double sin(double x, int n) {
     }
     return result;
 }
+
+double sinh(double x, int n) {
+    double result = 0.0;
+    for (int i = 0; i < n; i++) {
+      result += pow(x, 2 * i + 1) / factorial(2 * i + 1);
+    }
+    return result;
+}
+
+double square_rootPD(double num, double epsilon) {
+
+    double guess = num;
+    double prevguess = 0.0;
+
+    while (std::abs(guess - prevguess) > epsilon) {
+        prevguess = guess;
+        guess = 0.5 * (guess + num / guess);
+    }
+
+    return guess;
+}
