@@ -19,19 +19,26 @@ double pow(double base, int exponent) {
     return result;
 }
 
-double sin(double x, int n) {
-    double result = 0.0;
-    for (int i = 0; i < n; i++) {
-        result += (pow(-1, i) / factorial(2 * i + 1)) * pow(x, 2 * i + 1);
+double sin(double x, double epsilon) {
+    double tmp = 0.0, result = 0.0;
+    int ctr = 0;
+    while (std::abs(result - tmp) > epsilon) {
+        tmp = result;
+        result += (pow(-1, ctr) / factorial(2 * ctr + 1)) * pow(x, 2 * ctr + 1);
+        ++ctr;
     }
+
     return result;
 }
 
-double sinh(double x, int n) {
-    double result = 0.0;
-    for (int i = 0; i < n; i++) {
-      result += pow(x, 2 * i + 1) / factorial(2 * i + 1);
+double sinh(double x, double epsilon) {
+    double tmp = 0.0, result = 0.0;
+    int ctr = 0;
+    while (std::abs(result - tmp) > epsilon) {
+        tmp = result;
+        result += pow(x, 2 * ctr + 1) / factorial(2 * ctr + 1);
     }
+
     return result;
 }
 
