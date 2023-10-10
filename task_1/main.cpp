@@ -2,6 +2,8 @@
 
 #include "funcs.hpp"
 
+#define epsilon_sigma 1e-14
+
 double z(double x, double epsilon_u, double epsilon_phi, double epsilon_psi) {
     double u = sin(pow(x, 2) + 0.4, epsilon_u);
     double phi = square_rootPD(1 + pow(x, 2), epsilon_phi) / (1 - x);
@@ -13,21 +15,23 @@ int main(void) {
     double lower, upper, step;
     double epsilon_u, epsilon_phi, epsilon_psi;
 
-    printf( "Provide the input range as two floats\n" );
+    printf( "Provide the input range as two floats:\n" );
     scanf( "%lf%lf", &lower, &upper );
 
-    printf( "Provide step info\n" );
+    printf( "Provide step info:\n" );
     scanf( "%lf", &step );
 
-    printf( "Provide epsilons for u func, phi, psi\n" );
+    printf( "Provide epsilons for u func, phi, psi:\n" );
 
     scanf( "%lf%lf%lf", &epsilon_u, &epsilon_phi, &epsilon_psi );
     
-    printf("Thanks, working on it\n");
+    printf("Thanks, working on it;\n\n");
 
-    for (double i = lower; i <= upper; i += step) {
+    for (double i = lower; i < upper + epsilon_sigma; i += step) {
         printf( "%.14lf\n", z(i, epsilon_u, epsilon_phi, epsilon_psi) );
     }
+    
+    printf("\n");
 
     return 0;
 }

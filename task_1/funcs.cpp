@@ -20,9 +20,9 @@ double pow(double base, int exponent) {
 }
 
 double sin(double x, double epsilon) {
-    double tmp = 0.0, result = 0.0;
+    double tmp = 0.1, result = 0.0;
     int ctr = 0;
-    while (std::abs(result - tmp) > epsilon) {
+    while (std::abs(result - tmp) >= epsilon) {
         tmp = result;
         result += (pow(-1, ctr) / factorial(2 * ctr + 1)) * pow(x, 2 * ctr + 1);
         ++ctr;
@@ -32,11 +32,12 @@ double sin(double x, double epsilon) {
 }
 
 double sinh(double x, double epsilon) {
-    double tmp = 0.0, result = 0.0;
+    double tmp = 0.1, result = 0.0;
     int ctr = 0;
-    while (std::abs(result - tmp) > epsilon) {
+    while (std::abs(result - tmp) >= epsilon) {
         tmp = result;
         result += pow(x, 2 * ctr + 1) / factorial(2 * ctr + 1);
+        ++ctr;
     }
 
     return result;
