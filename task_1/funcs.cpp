@@ -5,7 +5,7 @@ double factorial(int n) {
     return n * factorial(n - 1);
 }
 
-double pow(double base, int exponent) {
+double power(double base, int exponent) {
     double result = 1.0;
     if (exponent > 0) {
         for (int i = 0; i < exponent; i++) {
@@ -19,24 +19,24 @@ double pow(double base, int exponent) {
     return result;
 }
 
-double sin(double x, double epsilon) {
+double sinus(double x, double epsilon) {
     double tmp = 0.1, result = 0.0;
     int ctr = 0;
     while (std::abs(result - tmp) >= epsilon) {
         tmp = result;
-        result += (pow(-1, ctr) / factorial(2 * ctr + 1)) * pow(x, 2 * ctr + 1);
+        result += (power(-1, ctr) / factorial(2 * ctr + 1)) * power(x, 2 * ctr + 1);
         ++ctr;
     }
 
     return result;
 }
 
-double sinh(double x, double epsilon) {
+double sinhus(double x, double epsilon) {
     double tmp = 0.1, result = 0.0;
     int ctr = 0;
-    while (std::abs(result - tmp) >= epsilon) {
+    while (std::abs(result - tmp)/3 >= epsilon) {
         tmp = result;
-        result += pow(x, 2 * ctr + 1) / factorial(2 * ctr + 1);
+        result += power(x, 2 * ctr + 1) / factorial(2 * ctr + 1);
         ++ctr;
     }
 
