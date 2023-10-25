@@ -20,25 +20,25 @@ double power(double base, int exponent) {
 }
 
 double sinus(double x, double epsilon) {
-    double tmp = 0.1, result = 0.0;
+    double result = 0.0, tmp = 0.0;
     int ctr = 0;
-    while (std::abs(result - tmp) >= epsilon) {
-        tmp = result;
-        result += (power(-1, ctr) / factorial(2 * ctr + 1)) * power(x, 2 * ctr + 1);
+    do {
+        tmp = (power(-1, ctr) / factorial(2 * ctr + 1)) * power(x, 2 * ctr + 1);
+        result += tmp;
         ++ctr;
-    }
+    } while (std::abs(tmp) >= epsilon); 
 
     return result;
 }
 
 double sinhus(double x, double epsilon) {
-    double tmp = 0.1, result = 0.0;
+    double result = 0.0, tmp = 0.0;
     int ctr = 0;
-    while (std::abs(result - tmp)/3 >= epsilon) {
-        tmp = result;
-        result += power(x, 2 * ctr + 1) / factorial(2 * ctr + 1);
+    do {
+        tmp = power(x, 2 * ctr + 1) / factorial(2 * ctr + 1);
+        result += tmp;
         ++ctr;
-    }
+    } while (std::abs(tmp)/3 >= epsilon);
 
     return result;
 }

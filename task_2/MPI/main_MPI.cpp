@@ -43,13 +43,27 @@ unsigned Matrix::columns() const {
     return data[0].size();
 }
 
+/*
 Matrix Matrix::solve() const {
-
+    return 0;
 }
+*/
 
+double Matrix::norm_inf() const {
+    double norm_inf = 0.0;
+    for (size_t i = 0; i < this->rows(); ++i) {
+        double row_sum = 0.0;
 
-unsigned Matrix::norm_inf() const {
-        
+        for (size_t j = 0; j < this->columns(); ++j) {
+            row_sum += std::abs(this[i][j]);
+        }
+
+        if (row_sum > norm_inf) {
+            norm_inf = row_sum;
+        }
+    }
+
+    return norm_inf;
 }
 
 int main(void) {
@@ -84,6 +98,7 @@ int main(void) {
     }
     std::cout << std::endl;
 
+/*
    try {
         
         if (m == 1) {
@@ -101,6 +116,7 @@ int main(void) {
     } catch (const std::invalid_argument& e) {
         std::cerr << "> " << e.what() << std::endl;
     }
+*/
     return 0;
 }
 

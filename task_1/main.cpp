@@ -47,6 +47,8 @@ int main(void) {
         z(i, epsilon_u, epsilon_phi, epsilon_psi, csvout);
     }
 
+    printf( "Data saved in output.csv\n" );
+    
     fclose(csvout);
     return 0;
 }
