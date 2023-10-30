@@ -55,7 +55,7 @@ double Matrix::norm_inf() const {
         double row_sum = 0.0;
 
         for (size_t j = 0; j < this->columns(); ++j) {
-            row_sum += std::abs(this[i][j]);
+            row_sum += std::abs((*this)[i][j]);
         }
 
         if (row_sum > norm_inf) {
@@ -97,6 +97,8 @@ int main(void) {
         }
     }
     std::cout << std::endl;
+    
+    std::cout << m10.norm_inf() << std::endl;
 
 /*
    try {
