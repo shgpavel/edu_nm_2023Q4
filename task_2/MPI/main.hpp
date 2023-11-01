@@ -1,14 +1,31 @@
+class Vector {
+public:
+    Vector(unsigned size);
+    ~Vector();
+
+    unsigned size () const;
+
+    Vector& operator=(const Vector& other);
+
+    double& operator[](unsigned index);
+    const double& operator[](unsigned index) const;
+
+
+private:
+    std::vector<double> data;
+};
+
+
 class Matrix {
 public:
     Matrix(unsigned rows, unsigned columns);
-    Matrix(const std::vector<std::vector<double>>& data);
-
+    Matrix(const Matrix& other);
+    
     ~Matrix();
 
-    Matrix(const Matrix& other);
+    const std::vector<double>& operator[](unsigned index) const;
 
     std::vector<double>& operator[](unsigned index);
-    const std::vector<double>& operator[](unsigned index) const;
     
     Matrix& operator=(const Matrix& other);
 
@@ -18,7 +35,7 @@ public:
 
     unsigned columns() const;
 
-//    Matrix solve() const;
+    void print();
 
 private:
     std::vector<std::vector<double>> data;
