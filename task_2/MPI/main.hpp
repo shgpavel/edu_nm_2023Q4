@@ -9,7 +9,8 @@ public:
 
     double& operator[](unsigned index);
     const double& operator[](unsigned index) const;
-
+    
+    void print() const;
 
 private:
     std::vector<double> data;
@@ -35,7 +36,7 @@ public:
 
     unsigned columns() const;
 
-    void print();
+    void print() const;
 
 private:
     std::vector<std::vector<double>> data;

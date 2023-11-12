@@ -30,6 +30,11 @@ const double& Vector::operator[](unsigned index) const {
     return data[index];
 }
 
+void Vector::print() const {
+    for (size_t i = 0; i < this->size(); ++i) {
+        std::cout << (*this)[i] << std::endl;
+    }
+}
 
 
 Matrix::Matrix(unsigned rows, unsigned columns)
@@ -43,7 +48,6 @@ Matrix::~Matrix() {}
 const std::vector<double>& Matrix::operator[](unsigned index) const {
     return data[index];
 }
-
 
 std::vector<double>& Matrix::operator[](unsigned index) {
     return data[index];
@@ -71,7 +75,6 @@ unsigned Matrix::columns() const {
 }
 
 
-
 double Matrix::norm_inf() const {
     double norm_inf = 0.0;
     for (size_t i = 0; i < this->rows(); ++i) {
@@ -90,7 +93,7 @@ double Matrix::norm_inf() const {
 }
 
 
-void Matrix::print() {
+void Matrix::print() const {
     for (size_t i = 0; i < this->rows(); ++i) {
         for (size_t j = 0; j < this->columns(); ++j) {
             std::cout << (*this)[i][j] << " ";
@@ -98,6 +101,35 @@ void Matrix::print() {
         std::cout << std::endl;
     } 
 }
+
+void MPI(Matrix& M, Vector& v1, Vector& solution, double eps) {
+    Vector c(v1.size());
+    c = v1;
+
+    double mi = 1.0/M.norm_inf();
+    for (size_t i = 0; i < c.size(); ++i) {
+        c[i] = c[i] * mi;
+    }
+    
+    Matrix B(M);
+    for (size_t i = 0; i < B.rows(); ++i) {
+        for (size_t j = 0; j < B.columns(); ++j) {
+            if (i == j) {
+                B[i][j] = 1 - (mi * B[i][j]);
+            } else {
+                B[i][j] = -mi * B[i][j];
+            }
+        }
+    }
+
+    if (B.norm_inf() < 1) {
+         Vector x_cur(c.size());
+         Vector x_next(c.size());
+         x_cur = c;
+         x_next = B * x_cur + c;
+    }
+}
+
 
 int main(void) {
     
@@ -159,36 +191,10 @@ int main(void) {
     }
     std::cout << std::endl;
     /* Data is set */
-
-    /* MPI */
-
-    Vector c(v1.size());
-    c = v1;
-   
-    double mi = 1.0/m10.norm_inf();
-    for (size_t i = 0; i < c.size(); ++i) {
-        c[i] = c[i] * mi;
-    }
     
-    m10.print();
-    
-    Matrix B(m10);
-    for (size_t i = 0; i < B.rows(); ++i) {
-        for (size_t j = 0; j < B.columns(); ++j) {
-            if (i == j) {
-                B[i][j] = 1 - (mi * B[i][j]);
-            } else {
-                B[i][j] = -mi * B[i][j];
-            }
-        }
-    }
-
-    B.print();    
-    std::cout << std::endl;
-    
-    if (B.norm_inf() >= 1) {
-        std::cout << "Provided matrix are linearly dependent" << std::endl;
-    }
+    Vector solution(v1.size());
+    MPI(m10, v1, solution);
+    solution.print();
 
     return 0;
 }
