@@ -1,14 +1,25 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
+
+#include <eigen3/Eigen/Dense>
+
 
 #include "main.hpp"
 
-Vector::Vector(unsigned size) : data(size) {}
+#define epsilon 1e-6
+#define N 15
+
+
+typedef enum cases {first, second, third, fourth, fifth} case_t;
+case_t mpi_case = first;
+
+Vector::Vector(size_t size) : data(size) {}
 
 Vector::~Vector() {}
 
 
-unsigned Vector::size() const {
+size_t Vector::size() const {
     return data.size();
 }
 
@@ -21,23 +32,44 @@ Vector& Vector::operator=(const Vector& other) {
     return *this;
 }
 
+Vector& Vector::operator+(const Vector& other) {
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] = data[i] + other.data[i];
+    }
+    return *this;
+}
 
-double& Vector::operator[](unsigned index) {
+Vector& Vector::operator-(const Vector& other) {
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] = data[i] - other.data[i];
+    }
+    return *this;
+}
+
+double& Vector::operator[](size_t index) {
     return data[index];
 }
 
-const double& Vector::operator[](unsigned index) const {
+const double& Vector::operator[](size_t index) const {
     return data[index];
+}
+
+double Vector::norm_diff(const Vector& other) const {
+    double result = 0;
+    for (size_t i = 0; i < this->size(); ++i) {
+        result += pow((*this)[i] - other[i], 2);
+    }
+    return sqrt(result);
 }
 
 void Vector::print() const {
     for (size_t i = 0; i < this->size(); ++i) {
-        std::cout << (*this)[i] << std::endl;
+        std::cout << (*this)[i] << '\n';
     }
 }
 
 
-Matrix::Matrix(unsigned rows, unsigned columns)
+Matrix::Matrix(size_t rows, size_t columns)
     : data(rows, std::vector<double>(columns)) {}
 
 Matrix::Matrix(const Matrix& other)
@@ -45,11 +77,11 @@ Matrix::Matrix(const Matrix& other)
 
 Matrix::~Matrix() {}
 
-const std::vector<double>& Matrix::operator[](unsigned index) const {
+const std::vector<double>& Matrix::operator[](size_t index) const {
     return data[index];
 }
 
-std::vector<double>& Matrix::operator[](unsigned index) {
+std::vector<double>& Matrix::operator[](size_t index) {
     return data[index];
 }
 
@@ -62,16 +94,58 @@ Matrix& Matrix::operator=(const Matrix& other) {
     return *this;
 }
 
+/*
+Matrix Matrix::operator=(std::initializer_list<double>& a) {
+    try ()
+    Matrix result(a.size(), a.size());
+}
+*/
 
-unsigned Matrix::rows() const {
+size_t Matrix::rows() const {
     return data.size();
 }
 
-unsigned Matrix::columns() const {
+size_t Matrix::columns() const {
     if (data.empty()) {
         return 0;
     }
     return data[0].size();
+}
+
+Vector Matrix::operator*(const Vector& vector) const {
+    Vector result(rows());
+    for (size_t i = 0; i < rows(); ++i) {
+        double sum = 0.0;
+        for (size_t j = 0; j < columns(); ++j) {
+            sum += data[i][j] * vector[j];
+        }
+        result[i] = sum;
+    }
+    return result;
+}
+
+Matrix Matrix::operator*(const Matrix& other) const {
+    Matrix result(rows(), other.columns());
+    for (unsigned i = 0; i < rows(); ++i) {
+        for (unsigned j = 0; j < other.columns(); ++j) {
+            double sum = 0.0;
+            for (unsigned k = 0; k < columns(); ++k) {
+                sum += data[i][k] * other.data[k][j];
+            }
+            result.data[i][j] = sum;
+        }
+    }
+    return result;
+}
+
+Matrix Matrix::transpose() const {
+    Matrix result(*this);
+    for (size_t i = 0; i < this->rows(); ++i) {
+        for (size_t j = 0; j < this->columns(); ++j) {
+            result[i][j] = (*this)[j][i];
+        }
+    }
+    return result;
 }
 
 
@@ -93,23 +167,24 @@ double Matrix::norm_inf() const {
 }
 
 
+double Matrix::norm_1() const {
+    Matrix tmp((*this).transpose());
+    return tmp.norm_inf();
+}
+
+
 void Matrix::print() const {
     for (size_t i = 0; i < this->rows(); ++i) {
         for (size_t j = 0; j < this->columns(); ++j) {
             std::cout << (*this)[i][j] << " ";
         }
-        std::cout << std::endl;
+        std::cout << '\n';
     } 
 }
 
-void MPI(Matrix& M, Vector& v1, Vector& solution, double eps) {
-    Vector c(v1.size());
-    c = v1;
-
+unsigned MPI(Matrix& M, Vector& b, Vector& solution) {
+    unsigned k = 1;
     double mi = 1.0/M.norm_inf();
-    for (size_t i = 0; i < c.size(); ++i) {
-        c[i] = c[i] * mi;
-    }
     
     Matrix B(M);
     for (size_t i = 0; i < B.rows(); ++i) {
@@ -121,81 +196,161 @@ void MPI(Matrix& M, Vector& v1, Vector& solution, double eps) {
             }
         }
     }
+    
 
-    if (B.norm_inf() < 1) {
-         Vector x_cur(c.size());
-         Vector x_next(c.size());
-         x_cur = c;
-         x_next = B * x_cur + c;
+    if ( B.norm_inf() >= 1 && B.norm_1() >= 1 ) {
+        if ( mpi_case == first ) {
+            Matrix M_trs(M);
+            Vector cache(b.size());
+
+            M_trs = M.transpose();
+            cache = b;
+
+            M = M * M_trs;
+            b = M_trs * cache;
+
+            mpi_case = second;
+            k = MPI(M, b, solution);
+            return k;
+        } else if ( mpi_case == second ) {
+            Vector c(b.size());
+            c = b;
+            for (size_t i = 0; i < c.size(); ++i) {
+                c[i] = c[i] * mi;
+            }
+            
+            Vector x_cur(c.size());
+            Vector x_next(c.size());
+            Vector cache(c.size());
+            
+            x_cur = c;
+            cache = B * x_cur;
+            x_next = cache + c;
+            cache = M * x_next;
+            
+            while (cache.norm_diff(b) > epsilon) {
+                x_cur = x_next;
+                cache = B * x_cur;
+                x_next = cache + c;
+                ++k;
+                cache = M * x_next;
+            }
+
+            solution = x_next;
+            return k;
+ 
+        }
     }
+
+    Vector c(b.size());
+    c = b;
+    for (size_t i = 0; i < c.size(); ++i) {
+        c[i] = c[i] * mi;
+    }
+    
+
+    Vector x_cur(c.size());
+    Vector x_next(c.size());
+    Vector cache(c.size());
+    double stop_mult = B.norm_inf() / (1 - B.norm_inf());
+
+
+    x_cur = c;
+    do {
+        cache = x_cur;
+        x_cur = x_next;
+        x_next = B * cache + c;
+        ++k;
+    } while ((stop_mult * x_next.norm_diff(x_cur)) > epsilon);
+
+    solution = x_next;
+    return k;
 }
 
 
+void eigen_solve(Matrix& A, Vector& b, Vector& solution) {
+	Eigen::MatrixXd eA;
+	Eigen::VectorXd eb, eres;
+	eb.resize(b.size());
+	eA.resize(A.rows(), A.columns());
+	
+    for (size_t i = 0; i < A.rows(); i++) {
+	    for (size_t j = 0; j < A.columns(); j++) {
+			eA(i, j) = A[i][j];
+		}
+	}
+
+	for (size_t i = 0; i < b.size(); i++) {
+		eb[i] = b[i];
+	}
+
+	eres = eA.colPivHouseholderQr().solve(eb);
+	for (size_t i = 0; i < solution.size(); i++) {
+		solution[i] = eres[i];
+    }
+}
+
+void test(case_t num, Matrix& M, Vector& b) {
+    switch (num) {
+        case first:
+            M = { 0, 2, 3, 1, 2, 4, 4, 5, 6 };
+            b = { 13, 17, 32 };
+    }
+}
+
 int main(void) {
     
-    int n, m;
-    std::cout << "Give me dismensions of matrix"<< std::endl;
+    /*
+    size_t n;
+    std::cout << "Give me matrix dismension:"<< '\n';
     
     while (1) {
         try {
-        std::cin >> n >> m;
-        std::cout << std::endl;
+        std::cin >> n;
+        std::cout << '\n';
         
-        if (n < 1 || m < 1) {
-            throw std::invalid_argument("Matrix size must be >= 1 1");
+        if (n < 1) {
+            throw std::invalid_argument("Matrix size must be >= 1 1;");
         } else {
             break;
         }
-    
         } catch (const std::invalid_argument& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+            std::cerr << "Error: " << e.what() << ";" << '\n';
         }
     }
 
-    Matrix m10(n, m);
-     
-
-    std::cout << "Give me elements of matrix" << std::endl;
+    Matrix m10(n, n);
+    std::cout << "Give me elements of A matrix:" << '\n';
     for (size_t i = 0; i < m10.rows(); ++i) {
         for (size_t j = 0; j < m10.columns(); ++j) {
             std::cin >> m10[i][j];
         }
     }
-    std::cout << std::endl; 
-
-    std::cout << "Give me b vector dismensions" << std::endl;
-
-    while (1) {
-        try {
-        std::cin >> n;
-        std::cout << std::endl;
-        
-        if (n < 0) {
-            throw std::invalid_argument("Vector dismensions must be >= 1");
-        }
-        
-        if (n >= 0) {
-            break;
-        }
-
-        } catch (const std::invalid_argument& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-        }
-    }
+    std::cout << '\n';
 
     Vector v1(n);
-
-    std::cout << "Give me coordinates of 1st vector:" << std::endl;
+    std::cout << "Give me coordinates of b vector:" << '\n';
     for (size_t i = 0; i < v1.size(); ++i) {
         std::cin >> v1[i];
     }
-    std::cout << std::endl;
-    /* Data is set */
+    std::cout << '\n';
+
+     Data is set 
     
+    Matrix m10(3, 3);
+    Vector v1(3);
     Vector solution(v1.size());
-    MPI(m10, v1, solution);
+
+    test(first, m10, v1);
+    eigen_solve(m10, v1, solution);
+    std::cout << "Eigen:" << '\n';
     solution.print();
 
+    unsigned g = MPI(m10, v1, solution);
+    std::cout << "MPI:" << '\n';
+    solution.print();
+    std::cout << "Number of iters: " << g << std::endl;
+    */
     return 0;
 }
 

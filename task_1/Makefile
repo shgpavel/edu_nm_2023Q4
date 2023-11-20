@@ -1,10 +1,10 @@
-CFLAGS := ${CFLAGS} -Wall -Wextra -O3 -std=c++2b
+CFLAGS := ${CFLAGS} -Wall -Wextra -O3 -std=c2x
 
-CC = clang++
-LD = clang++
+CC = clang
+LD = clang
 
-main: main.cpp
-	$(CC) main.cpp funcs.cpp -o main.o $(CFLAGS)
+main: main.c
+	$(CC) main.c funcs.c -o main.o -lm $(CFLAGS)
 
 clean:
 	rm -rf main.o output.csv

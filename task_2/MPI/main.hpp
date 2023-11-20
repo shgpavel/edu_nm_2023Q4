@@ -1,17 +1,20 @@
 class Vector {
 public:
-    Vector(unsigned size);
+    Vector(size_t size);
     ~Vector();
 
-    unsigned size () const;
+    size_t size () const;
+    
+    double& operator[](size_t index);
+    const double& operator[](size_t index) const;
 
     Vector& operator=(const Vector& other);
-
-    double& operator[](unsigned index);
-    const double& operator[](unsigned index) const;
-    
+    Vector& operator-(const Vector& other);
+    Vector& operator+(const Vector& other);
+   
+    double norm_diff(const Vector& other) const;
+        
     void print() const;
-
 private:
     std::vector<double> data;
 };
@@ -19,25 +22,31 @@ private:
 
 class Matrix {
 public:
-    Matrix(unsigned rows, unsigned columns);
+    Matrix(size_t rows, size_t columns);
     Matrix(const Matrix& other);
     
     ~Matrix();
+    
+    size_t rows() const;
+    size_t columns() const;
 
-    const std::vector<double>& operator[](unsigned index) const;
 
-    std::vector<double>& operator[](unsigned index);
+    std::vector<double>& operator[](size_t index);
+    const std::vector<double>& operator[](size_t index) const;
     
     Matrix& operator=(const Matrix& other);
+    void operator=(std::initializer_list<double>& a);
 
+    Vector operator*(const Vector& vector) const;
+    
+    Matrix operator*(const Matrix& other) const;
+    
+    Matrix transpose() const;
+    
     double norm_inf() const;
-
-    unsigned rows() const;
-
-    unsigned columns() const;
+    double norm_1() const;
 
     void print() const;
-
 private:
     std::vector<std::vector<double>> data;
 };

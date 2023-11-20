@@ -1,4 +1,5 @@
-#include <iostream>
+#include <stdio.h>
+#include <math.h>
 
 double factorial(int n) {
     if (n <= 1) return 1.0;
@@ -26,7 +27,7 @@ double sinus(double x, double epsilon) {
         tmp = (power(-1, ctr) / factorial(2 * ctr + 1)) * power(x, 2 * ctr + 1);
         result += tmp;
         ++ctr;
-    } while (std::abs(tmp) >= epsilon); 
+    } while (fabs(tmp) >= epsilon); 
 
     return result;
 }
@@ -38,7 +39,7 @@ double sinhus(double x, double epsilon) {
         tmp = power(x, 2 * ctr + 1) / factorial(2 * ctr + 1);
         result += tmp;
         ++ctr;
-    } while (std::abs(tmp)/3 >= epsilon);
+    } while (fabs(tmp)/3 >= epsilon);
 
     return result;
 }
@@ -48,7 +49,7 @@ double square_rootPD(double num, double epsilon) {
     double guess = num;
     double prevguess = 0.0;
 
-    while (std::abs(guess - prevguess) > epsilon) {
+    while (fabs(guess - prevguess) > epsilon) {
         prevguess = guess;
         guess = 0.5 * (guess + num / guess);
     }
