@@ -9,10 +9,6 @@
 
 #include "main.hpp"
 
-typedef enum cases {first, second} case_t;
-case_t mpi_case = first;
-
-
 Vector::Vector(size_t size) : data(size) {}
 
 Vector::~Vector() {}
@@ -174,10 +170,21 @@ void Matrix::print() const {
     } 
 }
 
-/* Here I will destroy race condition
+
+/*
+    If MPI_aux will be calculated in MPI
+    a smth. like race condition will occur
+    with this type of file reading to pass matrices
+*/
+
+
+double MPI_mi(Matrix M) {
+    return 1.0/M.norm_inf();
+}
+
 Matrix MPI_aux(Matrix M) {
     Matrix B(M);
-    double mi = 1.0/M.norm_inf();
+    double mi = MPI_mi(M);
     for (size_t i = 0; i < B.rows(); ++i) {
         for (size_t j = 0; j < B.columns(); ++j) {
             if (i == j) {
@@ -190,39 +197,27 @@ Matrix MPI_aux(Matrix M) {
 
     return B;
 }
-*/
 
 
 void MPI(Matrix& M, Vector& b, Vector& solution, double epsilon) {
-    double mi = 1.0/M.norm_inf();
-
+    double mi = MPI_mi(M);
     Matrix B(M);
-    for (size_t i = 0; i < B.rows(); ++i) {
-        for (size_t j = 0; j < B.columns(); ++j) {
-            if (i == j) {
-                B[i][j] = 1 - (mi * B[i][j]);
-            } else {
-                B[i][j] = -mi * B[i][j];
-            }
-        }
-    }
+    B = MPI_aux(M);
 
     if ( B.norm_inf() >= 1.0 && B.norm_1() >= 1.0 ) {
-        if ( mpi_case == first ) {
-            Matrix M_trs(M);
-            Vector cache(b.size());
+        Matrix M_trs(M);
+        Vector cache(b.size());
 
-            M_trs = M.transpose();
-            cache = b;
+        M_trs = M.transpose();
+        cache = b;
 
-            M = M_trs * M;
-            b = M_trs * cache;
+        M = M_trs * M;
+        b = M_trs * cache;
 
-            mpi_case = second;
-            MPI(M, b, solution, epsilon);
-            return;
-        
-        } else if ( mpi_case == second ) {
+        mi = MPI_mi(M);
+        B = MPI_aux(M);
+
+        if ( B.norm_inf() >= 1.0 && B.norm_1() >= 1.0) {
             Vector c(b.size());
             c = b;
             for (size_t i = 0; i < c.size(); ++i) {
@@ -232,11 +227,10 @@ void MPI(Matrix& M, Vector& b, Vector& solution, double epsilon) {
             Vector x_cur(c.size());
             Vector x_next(c.size());
             Vector cache(c.size());
-            
+
             x_cur = c;
             x_next = B * x_cur + c;
             cache = M * x_next;
-            
             while (cache.norm_diff(b) > epsilon) {
                 x_cur = x_next;
                 x_next = B * x_cur + c;
@@ -292,6 +286,7 @@ void eigen_solve(Matrix& A, Vector& b, Vector& solution) {
     }
 }
 
+
 void parse_test(std::string filename) {
     std::ifstream ifile(filename, std::ios::binary);
 
@@ -299,8 +294,8 @@ void parse_test(std::string filename) {
         throw std::invalid_argument("No such file");
     }
 
-    std::cout.precision(8); 
-    while (1) {
+    /* std::cout.precision(8); */
+    for (unsigned test = 0; ; ++test) {
         double epsilon;
         size_t matrix_size;
 
@@ -322,20 +317,27 @@ void parse_test(std::string filename) {
             ifile >> b[i];
         }
 
+        /*
+        This block have nothing with parse_test
+        im just too lazy to make an io
+        */
+
+        std::cout << "Test " << test << ":" <<'\n';
         M.print();
+        std::cout << '\n';
         b.print();
 
-        eigen_solve(M, b, solution);
-        std::cout << "Eigen:" << '\n';
-        solution.print();
-
         std::cout << '\n';
+        
+        eigen_solve(M, b, solution);
+        std::cout << "Eigen: ";
+        solution.print();
 
         MPI(M, b, solution, epsilon); 
-        std::cout << "MPI:" << '\n';
+        std::cout << "MPI: ";
         solution.print();
         
-        std::cout << "\n\n";
+        std::cout << '\n';
     }
 
     if (ifile.bad()) {
