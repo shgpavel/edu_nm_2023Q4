@@ -27,12 +27,6 @@ Vector& Vector::operator=(const Vector& other) {
     return *this;
 }
 
-Vector& Vector::operator+(const Vector& other) {
-    for (size_t i = 0; i < data.size(); ++i) {
-        data[i] = data[i] + other.data[i];
-    }
-    return *this;
-}
 
 Vector& Vector::operator-(const Vector& other) {
     for (size_t i = 0; i < data.size(); ++i) {
@@ -138,6 +132,25 @@ Matrix Matrix::transpose() const {
 }
 
 
+int Matrix::diag_domi() const {
+    double sum = 0.0;
+    for (size_t i = 0; i < rows(); ++i) {
+        double a_diag = std::abs(data[i][i]);
+        for (size_t j = 0; j < columns(); ++j) {
+            if (i != j) {
+                sum += std::abs(data[i][j]);
+            }
+        }
+        if ( sum > a_diag ) {
+            return -1;
+        }
+        sum = 0.0;
+    }
+    return 1;
+}
+
+
+
 double Matrix::norm_inf() const {
     double norm_inf = 0.0;
     for (size_t i = 0; i < rows(); ++i) {
@@ -155,12 +168,6 @@ double Matrix::norm_inf() const {
 }
 
 
-double Matrix::norm_1() const {
-    Matrix tmp((*this).transpose());
-    return tmp.norm_inf();
-}
-
-
 void Matrix::print() const {
     for (size_t i = 0; i < rows(); ++i) {
         for (size_t j = 0; j < columns(); ++j) {
@@ -171,97 +178,60 @@ void Matrix::print() const {
 }
 
 
-/*
-    If MPI_aux will be calculated in MPI
-    a smth. like race condition will occur
-    with this type of file reading to pass matrices
-*/
 
+void MS(Matrix& M, Vector& b, Vector& solution, double epsilon) {
+    int flag = 0;
 
-double MPI_mi(Matrix M) {
-    return 1.0/M.norm_inf();
-}
-
-Matrix MPI_aux(Matrix M) {
-    Matrix B(M);
-    double mi = MPI_mi(M);
-    for (size_t i = 0; i < B.rows(); ++i) {
-        for (size_t j = 0; j < B.columns(); ++j) {
-            if (i == j) {
-                B[i][j] = 1 - (mi * B[i][j]);
-            } else {
-                B[i][j] = -mi * B[i][j];
-            }
-        }
-    }
-
-    return B;
-}
-
-
-void MPI(Matrix& M, Vector& b, Vector& solution, double epsilon) {
-    double mi = MPI_mi(M);
-    Matrix B(M);
-    B = MPI_aux(M);
-
-    if ( B.norm_inf() >= 1.0 && B.norm_1() >= 1.0 ) {
-        Matrix M_trs(M);
-        Vector cache(b.size());
-
+    if ( M.diag_domi() == -1 ) {
+        Matrix M_trs(M.rows(), M.columns());
         M_trs = M.transpose();
-        cache = b;
-
         M = M_trs * M;
-        b = M_trs * cache;
-
-        mi = MPI_mi(M);
-        B = MPI_aux(M);
-
-        if ( B.norm_inf() >= 1.0 && B.norm_1() >= 1.0) {
-            Vector c(b.size());
-            c = b;
-            for (size_t i = 0; i < c.size(); ++i) {
-                c[i] = c[i] * mi;
-            }
-            
-            Vector x_cur(c.size());
-            Vector x_next(c.size());
-            Vector cache(c.size());
-
-            x_cur = c;
-            x_next = B * x_cur + c;
-            cache = M * x_next;
-            while (cache.norm_diff(b) > epsilon) {
-                x_cur = x_next;
-                x_next = B * x_cur + c;
-                cache = M * x_next;
-            }
-
-            solution = x_next;
-            return;
-        }
+        b = M_trs * b;
+        flag = 1;
     }
 
+    Matrix B(M.rows(), M.columns());
     Vector c(b.size());
-    c = b;
-    for (size_t i = 0; i < c.size(); ++i) {
-        c[i] = c[i] * mi;
+    for (size_t i = 0; i < M.rows(); ++i) {
+        for (size_t j = 0; j < M.columns(); ++j) {
+            if (i != j) {
+                B[i][j] = -M[i][j] / M[i][i];
+            }
+        }
+        c[i] = b[i] / M[i][i];
     }
-    
-
-    double stop_mult = B.norm_inf() / (1.0 - B.norm_inf());
-    Vector x_cur(c.size());
     Vector x_next(c.size());
+    Vector x_cur(c.size());
 
-
-    x_next = c;
-    do {
-        x_cur = x_next;
-        x_next = B * x_cur + c;
-    } while ((stop_mult * x_next.norm_diff(x_cur)) > epsilon);
-
-    solution = x_next;
+    if (flag == 0) {
+        double stop_mult = B.norm_inf() / (1 - B.norm_inf());
+        do {
+            x_cur = x_next;
+            for (size_t i = 0; i < M.rows(); ++i) {
+                double sum = 0.0;
+                for (size_t j = 0; j < M.columns(); ++j) {
+                    sum += B[i][j] * x_next[j];
+                }
+                sum += c[i];
+                x_next[i] = sum;
+            }
+        } while ( stop_mult * x_next.norm_diff(x_cur) > epsilon );
+    } else if (flag == 1) {
+        do {
+            x_cur = x_next;
+            for (size_t i = 0; i < B.rows(); ++i) {
+                double sum = 0.0;
+                for (size_t j = 0; j < B.columns(); ++j) {
+                    sum += B[i][j] * x_next[j];
+                }
+                sum += c[i];
+                x_next[i] = sum;
+            }
+        } while ( (M * x_next).norm_diff(b) > epsilon );
+        solution = x_next;
+    }
 }
+
 
 
 void eigen_solve(Matrix& A, Vector& b, Vector& solution) {
@@ -294,7 +264,6 @@ void parse_test(std::string filename) {
         throw std::invalid_argument("No such file");
     }
 
-    /* std::cout.precision(8); */
     for (unsigned test = 0; ; ++test) {
         double epsilon;
         size_t matrix_size;
@@ -317,11 +286,12 @@ void parse_test(std::string filename) {
             ifile >> b[i];
         }
 
+
         /*
         This block have nothing with parse_test
         im just too lazy to make an io
         */
-
+        
         std::cout << "Test " << test << ":" <<'\n';
         M.print();
         std::cout << '\n';
@@ -332,8 +302,8 @@ void parse_test(std::string filename) {
         std::cout << "Eigen: ";
         solution.print();
 
-        MPI(M, b, solution, epsilon); 
-        std::cout << "MPI: ";
+        MS(M, b, solution, epsilon); 
+        std::cout << "MS: ";
         solution.print();
         
     }
