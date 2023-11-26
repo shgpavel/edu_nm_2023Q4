@@ -11,6 +11,9 @@
 
 Vector::Vector(size_t size) : data(size) {}
 
+Vector::Vector(const Vector& other)
+    : data(other.data) {}
+
 Vector::~Vector() {}
 
 
@@ -206,10 +209,9 @@ void MPI(Matrix& M, Vector& b, Vector& solution, double epsilon) {
 
     if ( B.norm_inf() >= 1.0 && B.norm_1() >= 1.0 ) {
         Matrix M_trs(M);
-        Vector cache(b.size());
+        Vector cache(b);
 
         M_trs = M.transpose();
-        cache = b;
 
         M = M_trs * M;
         b = M_trs * cache;
@@ -218,17 +220,15 @@ void MPI(Matrix& M, Vector& b, Vector& solution, double epsilon) {
         B = MPI_aux(M);
 
         if ( B.norm_inf() >= 1.0 && B.norm_1() >= 1.0) {
-            Vector c(b.size());
-            c = b;
+            Vector c(b);
             for (size_t i = 0; i < c.size(); ++i) {
                 c[i] = c[i] * mi;
             }
             
-            Vector x_cur(c.size());
+            Vector x_cur(c);
             Vector x_next(c.size());
             Vector cache(c.size());
 
-            x_cur = c;
             x_next = B * x_cur + c;
             cache = M * x_next;
             while (cache.norm_diff(b) > epsilon) {
@@ -242,8 +242,7 @@ void MPI(Matrix& M, Vector& b, Vector& solution, double epsilon) {
         }
     }
 
-    Vector c(b.size());
-    c = b;
+    Vector c(b);
     for (size_t i = 0; i < c.size(); ++i) {
         c[i] = c[i] * mi;
     }
@@ -251,10 +250,8 @@ void MPI(Matrix& M, Vector& b, Vector& solution, double epsilon) {
 
     double stop_mult = B.norm_inf() / (1.0 - B.norm_inf());
     Vector x_cur(c.size());
-    Vector x_next(c.size());
+    Vector x_next(c);
 
-
-    x_next = c;
     do {
         x_cur = x_next;
         x_next = B * x_cur + c;
@@ -294,7 +291,6 @@ void parse_test(std::string filename) {
         throw std::invalid_argument("No such file");
     }
 
-    /* std::cout.precision(8); */
     for (unsigned test = 0; ; ++test) {
         double epsilon;
         size_t matrix_size;

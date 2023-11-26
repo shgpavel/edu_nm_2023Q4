@@ -27,6 +27,12 @@ Vector& Vector::operator=(const Vector& other) {
     return *this;
 }
 
+Vector& Vector::operator+(const Vector& other) {
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] = data[i] + other.data[i];
+    }
+    return *this;
+}
 
 Vector& Vector::operator-(const Vector& other) {
     for (size_t i = 0; i < data.size(); ++i) {
@@ -41,14 +47,6 @@ double& Vector::operator[](size_t index) {
 
 const double& Vector::operator[](size_t index) const {
     return data[index];
-}
-
-double Vector::norm_diff(const Vector& other) const {
-    double result = 0.0;
-    for (size_t i = 0; i < size(); ++i) {
-        result += pow(data[i] - other.data[i], 2);
-    }
-    return sqrt(result);
 }
 
 void Vector::print() const {
@@ -95,79 +93,6 @@ size_t Matrix::columns() const {
     return data[0].size();
 }
 
-Vector Matrix::operator*(const Vector& vector) const {
-    Vector result(rows());
-    for (size_t i = 0; i < rows(); ++i) {
-        double sum = 0.0;
-        for (size_t j = 0; j < columns(); ++j) {
-            sum += data[i][j] * vector[j];
-        }
-        result[i] = sum;
-    }
-    return result;
-}
-
-Matrix Matrix::operator*(const Matrix& other) const {
-    Matrix result(rows(), other.columns());
-    for (size_t i = 0; i < rows(); ++i) {
-        for (size_t j = 0; j < other.columns(); ++j) {
-            double sum = 0.0;
-            for (size_t k = 0; k < columns(); ++k) {
-                sum += data[i][k] * other.data[k][j];
-            }
-            result.data[i][j] = sum;
-        }
-    }
-    return result;
-}
-
-Matrix Matrix::transpose() const {
-    Matrix result(rows(), columns());
-    for (size_t i = 0; i < rows(); ++i) {
-        for (size_t j = 0; j < columns(); ++j) {
-            result[i][j] = data[j][i];
-        }
-    }
-    return result;
-}
-
-
-int Matrix::diag_domi() const {
-    double sum = 0.0;
-    for (size_t i = 0; i < rows(); ++i) {
-        double a_diag = std::abs(data[i][i]);
-        for (size_t j = 0; j < columns(); ++j) {
-            if (i != j) {
-                sum += std::abs(data[i][j]);
-            }
-        }
-        if ( sum > a_diag ) {
-            return -1;
-        }
-        sum = 0.0;
-    }
-    return 1;
-}
-
-
-
-double Matrix::norm_inf() const {
-    double norm_inf = 0.0;
-    for (size_t i = 0; i < rows(); ++i) {
-        double row_sum = 0.0;
-
-        for (size_t j = 0; j < columns(); ++j) {
-            row_sum += std::abs(data[i][j]);
-        }
-
-        if (row_sum > norm_inf) {
-            norm_inf = row_sum;
-        }
-    }
-    return norm_inf;
-}
-
-
 void Matrix::print() const {
     for (size_t i = 0; i < rows(); ++i) {
         for (size_t j = 0; j < columns(); ++j) {
@@ -177,61 +102,59 @@ void Matrix::print() const {
     } 
 }
 
+void LUP(Matrix& M, Vector& c, Vector& solution) {
+    Matrix A(M);
+    Vector b(c.size());
 
-
-void MS(Matrix& M, Vector& b, Vector& solution, double epsilon) {
-    int flag = 0;
-
-    if ( M.diag_domi() == -1 ) {
-        Matrix M_trs(M.rows(), M.columns());
-        M_trs = M.transpose();
-        M = M_trs * M;
-        b = M_trs * b;
-        flag = 1;
+    std::vector<size_t> perm(A.rows());
+    for (size_t i = 0; i < A.rows(); ++i) {
+        perm[i] = i;
     }
 
-    Matrix B(M.rows(), M.columns());
-    Vector c(b.size());
-    for (size_t i = 0; i < M.rows(); ++i) {
-        for (size_t j = 0; j < M.columns(); ++j) {
-            if (i != j) {
-                B[i][j] = -M[i][j] / M[i][i];
+    for (size_t i = 0; i < A.rows(); ++i) {
+        double lead = 0;
+        size_t swap = i;
+        for (size_t j = i + 1; j < A.columns(); ++j) {
+            if (std::abs(lead) < std::abs(A[j][i])) {
+                lead = A[j][i];
+                swap = j;
             }
         }
-        c[i] = b[i] / M[i][i];
-    }
-    Vector x_next(c.size());
-    Vector x_cur(c.size());
+        
+        if (swap != i) {
+            std::swap(perm[i], perm[swap]);
+            std::swap(A[i], A[swap]);
+        }
 
-    if (flag == 0) {
-        double stop_mult = B.norm_inf() / (1 - B.norm_inf());
-        do {
-            x_cur = x_next;
-            for (size_t i = 0; i < B.rows(); ++i) {
-                double sum = 0.0;
-                for (size_t j = 0; j < B.columns(); ++j) {
-                    sum += B[i][j] * x_next[j];
-                }
-                sum += c[i];
-                x_next[i] = sum;
+        for (size_t j = i + 1; j < A.rows(); ++j) {
+            A[j][i] /= lead;
+            for (size_t k = i + 1; k < A.columns(); ++k) {
+                A[j][k] -= A[j][i] * A[i][k];
             }
-        } while ( stop_mult * x_next.norm_diff(x_cur) > epsilon );
-    } else if (flag == 1) {
-        do {
-            x_cur = x_next;
-            for (size_t i = 0; i < B.rows(); ++i) {
-                double sum = 0.0;
-                for (size_t j = 0; j < B.columns(); ++j) {
-                    sum += B[i][j] * x_next[j];
-                }
-                sum += c[i];
-                x_next[i] = sum;
-            }
-        } while ( (M * x_next).norm_diff(b) > epsilon );
-        solution = x_next;
+        }
+    }
+
+    for (size_t i = 0; i < b.size(); ++i) {
+        b[i] = c[perm[i]];
+    }
+
+
+    for (size_t i = 0; i < A.rows(); ++i) {
+        for (size_t j = 0; j < i; ++j) {
+            b[i] = b[i] - (A[i][j] * b[j]);
+        }
+    }
+    
+    for (size_t i = A.rows(); i > 0; ) {
+        --i;
+        solution[i] = b[i];
+        for (size_t j = A.rows(); j > i + 1; ) {
+            --j;
+            solution[i] = solution[i] - (A[i][j] * solution[j]);
+        }
+        solution[i] = solution[i] / A[i][i];
     }
 }
-
 
 
 void eigen_solve(Matrix& A, Vector& b, Vector& solution) {
@@ -256,7 +179,6 @@ void eigen_solve(Matrix& A, Vector& b, Vector& solution) {
     }
 }
 
-
 void parse_test(std::string filename) {
     std::ifstream ifile(filename, std::ios::binary);
 
@@ -265,10 +187,9 @@ void parse_test(std::string filename) {
     }
 
     for (unsigned test = 0; ; ++test) {
-        double epsilon;
         size_t matrix_size;
 
-        ifile >> epsilon >> matrix_size;
+        ifile >> matrix_size;
 
         if (ifile.eof()) break;
 
@@ -290,22 +211,20 @@ void parse_test(std::string filename) {
         /*
         This block have nothing with parse_test
         im just too lazy to make an io
-        */
-        
+        */ 
+
         std::cout << "Test " << test << ":" <<'\n';
         M.print();
         std::cout << '\n';
         b.print();
 
-        
         eigen_solve(M, b, solution);
         std::cout << "Eigen: ";
         solution.print();
 
-        MS(M, b, solution, epsilon); 
-        std::cout << "MS: ";
+        LUP(M, b, solution); 
+        std::cout << "LUP: ";
         solution.print();
-        
     }
 
     if (ifile.bad()) {

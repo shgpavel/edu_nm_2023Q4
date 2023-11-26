@@ -1,7 +1,6 @@
 class Vector {
 public:
     Vector(size_t size);
-    Vector(const Vector& other);
     ~Vector();
 
     size_t size () const;
@@ -13,8 +12,6 @@ public:
     Vector& operator-(const Vector& other);
     Vector& operator+(const Vector& other);
    
-    double norm_diff(const Vector& other) const;
-        
     void print() const;
 private:
     std::vector<double> data;
@@ -36,15 +33,7 @@ public:
     const std::vector<double>& operator[](size_t index) const;
     
     Matrix& operator=(const Matrix& other);
-
-    Vector operator*(const Vector& vector) const;
     
-    Matrix operator*(const Matrix& other) const;
-    
-    Matrix transpose() const;
-    
-    double norm_inf() const;
-    double norm_1() const;
 
     void print() const;
 private:
