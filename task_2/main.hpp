@@ -44,6 +44,8 @@ public:
     Vector operator*(const Vector& vector) const;
     
     Matrix operator*(const Matrix& other) const;
+    Matrix operator*(const double a) const;
+    Matrix operator+(const Matrix& other) const;
     
     Matrix transpose() const;
  

@@ -19,7 +19,7 @@ limitations under the License.
 
 #include "../main.hpp"
 
-int MS(const Matrix& M, const Vector& c, Vector& solution, double epsilon) {
+int MS(const Matrix& M, const Vector& c, Vector& solution, const double epsilon) {
     
     Matrix A(M);
     Vector b(c);

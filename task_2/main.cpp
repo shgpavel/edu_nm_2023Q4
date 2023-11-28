@@ -158,6 +158,26 @@ Matrix Matrix::operator*(const Matrix& other) const {
     return result;
 }
 
+Matrix Matrix::operator*(const double a) const {
+    Matrix result(rows(), columns());
+    for (size_t i = 0; i < rows(); ++i) {
+        for (size_t j = 0; j < columns(); ++j) {
+            result[i][j] = data[i][j] * a;
+        }
+    }
+    return result;
+}
+
+Matrix Matrix::operator+(const Matrix& other) const {
+    Matrix result(rows(), other.columns());
+    for (size_t i = 0; i < rows(); ++i) {
+        for (size_t j = 0; j < other.columns(); ++j) {
+            result[i][j] = data[i][j] + other.data[i][j];
+        }
+    }
+    return result;
+}
+
 Matrix Matrix::transpose() const {
     Matrix result(rows(), columns());
     for (size_t i = 0; i < rows(); ++i) {
@@ -219,7 +239,6 @@ void Matrix::print() const {
 }
 
 
-
 void parse_test(std::string filename) {
     std::ifstream ifile(filename, std::ios::binary);
 
@@ -250,10 +269,8 @@ void parse_test(std::string filename) {
             ifile >> b[i];
         }
 
-        /*
-            Next block have nothing related to parse_test
-        */
-
+        /*  Next block have nothing related to parse_test   */
+        
         std::cout << "Test " << test << ":" <<'\n';
         
         eigen_solve(M, b, solution_r);
@@ -286,6 +303,86 @@ void parse_test(std::string filename) {
     ifile.close();
 }
 
+/*
+void test_5() {
+    // 15 times 1e-(x) x in 3-6
+    const double epsilon_0 = 1.5e-5;
+    const double epsilon_1 = 1e-6;
+    for (size_t size = 4; size < 11; ++size) {
+        Matrix A(size, size);
+        Matrix Cache(A);
+        Vector b(size);
+        Vector solution(size);
+        Vector solution_r(size);
+
+
+        for (size_t i = 0; i < size; ++i) {
+            
+            for (size_t j = 0; j <= i; ++j) {
+                Cache[i][j] = 1;
+            }
+
+            for (size_t j = i + 1; j < size; ++j) {
+                Cache[i][j] = -1;
+            }
+        }
+
+        Cache = Cache * epsilon_0;
+
+        for (size_t i = 0; i < size; ++i) {
+            for (size_t j = 0; j < i; ++j) {
+                A[i][j] = 0;
+            }
+
+            A[i][i] = 1;
+
+            for (size_t j = i + 1; j < size; ++j) {
+                A[i][j] = -1;
+            }
+        }
+
+        A = A + Cache;
+
+        for (size_t i = 0; i < size - 1; ++i) {
+            b[i] = -1;
+        }
+        b[size - 1] = 1;
+
+        std::cout << "n: " << size << ":" <<'\n';
+        
+        eigen_solve(A, b, solution_r);
+        std::cout << "Eigen: ";
+        solution_r.print();
+
+        int k = MPI(A, b, solution, epsilon_1); 
+        std::cout << "MPI: ";
+        solution.print();
+    
+        double delta = solution.norm_diff(solution_r);
+        std::cout << "delta: " << delta << "  k: " << k << "\n\n";
+
+        k = MS(A, b, solution, epsilon_1); 
+        std::cout << "MS: ";
+        solution.print();
+        delta = solution.norm_diff(solution_r);
+        std::cout << "delta: " << delta << "  k: " << k << "\n\n";
+
+        LUP(A, b, solution); 
+        std::cout << "LUP: ";
+        solution.print();
+        delta = solution.norm_diff(solution_r);
+        std::cout << "delta: " << delta << '\n';
+
+        
+        QR(A, b, solution); 
+        std::cout << "QR: ";
+        solution.print();
+        delta = solution.norm_diff(solution_r);
+        std::cout << "delta: " << delta << '\n';
+
+   }
+}
+*/
 
 int main(void) {
 
@@ -301,5 +398,9 @@ int main(void) {
         }
     }
     
+    /*
+    test_5();
+    */
+
     return 0;
 }

@@ -43,7 +43,7 @@ Matrix MPI_aux(const Matrix A) {
 }
 
 
-int MPI(const Matrix& M, const Vector& c_in, Vector& solution, double epsilon) {
+int MPI(const Matrix& M, const Vector& c_in, Vector& solution, const double epsilon) {
     Matrix A(M);
     Vector b(c_in);
 
