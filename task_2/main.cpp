@@ -1,15 +1,38 @@
+/*
+Copyright 2023 Pavel Shago
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 #include <iostream>
 #include <vector>
-#include <cmath>
 #include <string>
 #include <fstream>
 
-#include <eigen3/Eigen/Dense>
-
-
 #include "main.hpp"
 
+#include "MPI/mpi.hpp"
+#include "MS/ms.hpp"
+#include "LUP/lup.hpp"
+#include "QR/qr.hpp"
+#include "EigenWrap/eigen_wrap.hpp"
+#include "Funcs/funcs.hpp"
+
+
 Vector::Vector(size_t size) : data(size) {}
+
+Vector::Vector(const Vector& other)
+    : data(other.data) {}
 
 Vector::~Vector() {}
 
@@ -27,6 +50,12 @@ Vector& Vector::operator=(const Vector& other) {
     return *this;
 }
 
+Vector& Vector::operator+(const Vector& other) {
+    for (size_t i = 0; i < data.size(); ++i) {
+        data[i] = data[i] + other.data[i];
+    }
+    return *this;
+}
 
 Vector& Vector::operator-(const Vector& other) {
     for (size_t i = 0; i < data.size(); ++i) {
@@ -43,12 +72,20 @@ const double& Vector::operator[](size_t index) const {
     return data[index];
 }
 
+double Vector::norm_2(size_t start = 0) const {
+    double result = 0.0;
+    for (size_t i = start; i < size(); ++i) {
+        result += data[i] * data[i];
+    }
+    return square_root_pd(result, 1e-14);
+}
+
 double Vector::norm_diff(const Vector& other) const {
     double result = 0.0;
     for (size_t i = 0; i < size(); ++i) {
-        result += pow(data[i] - other.data[i], 2);
+        result += (data[i] - other.data[i]) * (data[i] - other.data[i]);
     }
-    return sqrt(result);
+    return square_root_pd(result, 1e-14);
 }
 
 void Vector::print() const {
@@ -131,7 +168,6 @@ Matrix Matrix::transpose() const {
     return result;
 }
 
-
 int Matrix::diag_domi() const {
     double sum = 0.0;
     for (size_t i = 0; i < rows(); ++i) {
@@ -148,7 +184,6 @@ int Matrix::diag_domi() const {
     }
     return 1;
 }
-
 
 
 double Matrix::norm_inf() const {
@@ -168,6 +203,12 @@ double Matrix::norm_inf() const {
 }
 
 
+double Matrix::norm_1() const {
+    Matrix tmp((*this).transpose());
+    return tmp.norm_inf();
+}
+
+
 void Matrix::print() const {
     for (size_t i = 0; i < rows(); ++i) {
         for (size_t j = 0; j < columns(); ++j) {
@@ -177,84 +218,6 @@ void Matrix::print() const {
     } 
 }
 
-
-
-void MS(Matrix& M, Vector& b, Vector& solution, double epsilon) {
-    int flag = 0;
-
-    if ( M.diag_domi() == -1 ) {
-        Matrix M_trs(M.rows(), M.columns());
-        M_trs = M.transpose();
-        M = M_trs * M;
-        b = M_trs * b;
-        flag = 1;
-    }
-
-    Matrix B(M.rows(), M.columns());
-    Vector c(b.size());
-    for (size_t i = 0; i < M.rows(); ++i) {
-        for (size_t j = 0; j < M.columns(); ++j) {
-            if (i != j) {
-                B[i][j] = -M[i][j] / M[i][i];
-            }
-        }
-        c[i] = b[i] / M[i][i];
-    }
-    Vector x_next(c.size());
-    Vector x_cur(c.size());
-
-    if (flag == 0) {
-        double stop_mult = B.norm_inf() / (1 - B.norm_inf());
-        do {
-            x_cur = x_next;
-            for (size_t i = 0; i < B.rows(); ++i) {
-                double sum = 0.0;
-                for (size_t j = 0; j < B.columns(); ++j) {
-                    sum += B[i][j] * x_next[j];
-                }
-                sum += c[i];
-                x_next[i] = sum;
-            }
-        } while ( stop_mult * x_next.norm_diff(x_cur) > epsilon );
-    } else if (flag == 1) {
-        do {
-            x_cur = x_next;
-            for (size_t i = 0; i < B.rows(); ++i) {
-                double sum = 0.0;
-                for (size_t j = 0; j < B.columns(); ++j) {
-                    sum += B[i][j] * x_next[j];
-                }
-                sum += c[i];
-                x_next[i] = sum;
-            }
-        } while ( (M * x_next).norm_diff(b) > epsilon );
-        solution = x_next;
-    }
-}
-
-
-
-void eigen_solve(Matrix& A, Vector& b, Vector& solution) {
-	Eigen::MatrixXd eA;
-	Eigen::VectorXd eb, eres;
-	eb.resize(b.size());
-	eA.resize(A.rows(), A.columns());
-	
-    for (size_t i = 0; i < A.rows(); i++) {
-	    for (size_t j = 0; j < A.columns(); j++) {
-			eA(i, j) = A[i][j];
-		}
-	}
-
-	for (size_t i = 0; i < b.size(); i++) {
-		eb[i] = b[i];
-	}
-
-	eres = eA.colPivHouseholderQr().solve(eb);
-	for (size_t i = 0; i < solution.size(); i++) {
-		solution[i] = eres[i];
-    }
-}
 
 
 void parse_test(std::string filename) {
@@ -275,6 +238,7 @@ void parse_test(std::string filename) {
         Matrix M(matrix_size, matrix_size);
         Vector b(matrix_size);
         Vector solution(matrix_size);
+        Vector solution_r(matrix_size);
 
         for (size_t i = 0; i < matrix_size; ++i) {
             for (size_t j = 0; j < matrix_size; ++j) {
@@ -286,26 +250,33 @@ void parse_test(std::string filename) {
             ifile >> b[i];
         }
 
-
         /*
-        This block have nothing with parse_test
-        im just too lazy to make an io
+            Next block have nothing related to parse_test
         */
-        
-        std::cout << "Test " << test << ":" <<'\n';
-        M.print();
-        std::cout << '\n';
-        b.print();
 
+        std::cout << "Test " << test << ":" <<'\n';
         
-        eigen_solve(M, b, solution);
+        eigen_solve(M, b, solution_r);
         std::cout << "Eigen: ";
+        solution_r.print();
+
+        MPI(M, b, solution, epsilon); 
+        std::cout << "MPI: ";
         solution.print();
 
         MS(M, b, solution, epsilon); 
         std::cout << "MS: ";
         solution.print();
         
+        LUP(M, b, solution); 
+        std::cout << "LUP: ";
+        solution.print();
+        
+        QR(M, b, solution); 
+        std::cout << "QR: ";
+        solution.print();
+
+        std::cout << '\n';
     }
 
     if (ifile.bad()) {

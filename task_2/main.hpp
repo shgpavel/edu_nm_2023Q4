@@ -1,3 +1,6 @@
+#ifndef MAIN_HPP_
+#define MAIN_HPP_
+
 class Vector {
 public:
     Vector(size_t size);
@@ -13,6 +16,7 @@ public:
     Vector& operator-(const Vector& other);
     Vector& operator+(const Vector& other);
    
+    double norm_2(size_t) const;
     double norm_diff(const Vector& other) const;
         
     void print() const;
@@ -42,7 +46,8 @@ public:
     Matrix operator*(const Matrix& other) const;
     
     Matrix transpose() const;
-    
+ 
+    int diag_domi() const;   
     double norm_inf() const;
     double norm_1() const;
 
@@ -50,3 +55,5 @@ public:
 private:
     std::vector<std::vector<double>> data;
 };
+
+#endif
