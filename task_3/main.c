@@ -29,7 +29,7 @@ limitations under the License.
 typedef struct segment {
     double start;
     double end;
-} segm_t;
+} segment_t;
 
 
 double func(double x) {
@@ -41,7 +41,7 @@ double func_d(double x) {
     return (-1.0/(sin(x) * sin(x)) - 1);
 }
 
-int sequential_search(segm_t *a, size_t n) {
+int sequential_search(segment_t *a, size_t n) {
     double h = (a->end - a->start)/n;
 
     for (size_t i = 1; i <= n; ++i) {
@@ -54,51 +54,57 @@ int sequential_search(segm_t *a, size_t n) {
     return 1;
 }
 
-void secant_method(segm_t *a, double epsilon) {
+
+void secant_method(segment_t *a, double epsilon) {
     while (fabs(a->end - a->start) > epsilon) {
         a->start = 
-            a->start - (a->end - a->start) * func(a->start) /
-                        (func(a->end) - func(a->start));
+            a->start - (a->end - a->start)/(func(a->end) - func(a->start)) 
+                                                    * func(a->start);
 
-        a->end = 
-            a->end - (a->start - a->end) * func(a->end) /
-                        (func(a->start) - func(a->end));
+        a->end =
+            a->end - (a->start - a->end) / (func(a->start) - func(a->end))
+                                                    * func(a->end);
     }
 }
 
-int newton_method(double *x_0, double epsilon) {
-    double y, y_d, x_1;
+int newton_method(segment_t *a, double epsilon) {
+    segment_t b;
     for (size_t i = 0; i < MAX_ITER; ++i) {
-        y = func(*x_0);
-        y_d = func_d(*x_0);
-        
-        if (fabs(y_d) < TOO_SMALL) {
-            return 1;
+        if (func(a->start) * func(a->end) > 0) {
+            secant_method(a, epsilon);
         }
 
-        x_1 = *x_0 - (y/y_d);
-        if ( fabs(x_1 - *x_0) < epsilon ) {
-            *x_0 = x_1;
+        printf("%lf %lf\n", a->start, a->end);
+
+        b = *a;
+        
+        if (func(a->start) < 0) {
+            a->start = a->start - (func(a->start)/func_d(a->start));
+        } else {
+            a->end   = a->end   - (func(a->end)/func_d(a->end));
+        }
+
+        if ( fabs(b.start - a->start) < epsilon && fabs(b.end - a->end) < epsilon ) {
             return 0;
         }
-        *x_0 = x_1;
     }
     return -1;
 }
 
-double func_1_x(double x, double y) {
+
+double func_1_x(double x) {
     return sin(x + 1);
 }
 
-double func_1_y() {
+double func_1_y(void) {
     return 2.0;
 }
 
-double func_2_x() {
+double func_2_x(void) {
     return 1.0;
 }
 
-double func_2_y(double x, double y) {
+double func_2_y(double y) {
     return cos(y);
 }
 
@@ -107,30 +113,92 @@ double func_1(double x, double y) {
 }
 
 double func_2(double x, double y) {
-    return (x + sin(y) + 0);
+    return (x + sin(y) + 0.4);
 }
 
-int newton_method_sys(double x_0, double y_0, double epsilon) {
+
+int newton_method_sys(double *x_0, double *y_0, double epsilon) {
+    matrix a;
     vector x_k, x_k_next;
-    double h_n, g_n;
-    do {
+    vector b;
+    vector sol;
+
+    matrix_init(&a, 2, sizeof(double));
+    matrix_fill_rand(&a);
+
+    vector_init(&x_k, 2, sizeof(double));
+    
+    vector_push(&x_k, (void *)x_0);
+    vector_push(&x_k, (void *)y_0);
+
+    vector_init_copy(&x_k_next, &x_k);
+    vector_init_copy(&b, &x_k);
+    vector_init_copy(&sol, &x_k);
+
+    double tmp;
+
+    while (1) {
+
+        tmp = *(double *)vector_get(&x_k_next, 0);
+        vector_change(&x_k, 0, (void *)&tmp);
+        tmp = *(double *)vector_get(&x_k_next, 1);
+        vector_change(&x_k, 1, (void *)&tmp);
+
+        tmp = func_1_x(*(double *)vector_get(&x_k, 0));
+        matrix_change(&a, 0, 0, &tmp);
+        tmp = func_1_y();
+        matrix_change(&a, 0, 1, &tmp);
+        tmp = func_2_x();
+        matrix_change(&a, 1, 0, &tmp);
+        tmp = func_2_y(*(double *)vector_get(&x_k, 0));
+        matrix_change(&a, 1, 1, &tmp);
+
+        tmp = -func_1(*(double *)vector_get(&x_k, 0), 
+                        *(double *)vector_get(&x_k, 1));
+        vector_change(&b, 0, (void *)&tmp);
+        tmp = -func_2(*(double *)vector_get(&x_k, 0), 
+                        *(double *)vector_get(&x_k, 1));
+        vector_change(&b, 1, (void *)&tmp);
+
+        lup(&a, &b, &sol);
         
+        tmp = *(double *)vector_get(&x_k, 0) +
+                    *(double *)vector_get(&sol, 0);
+        vector_change(&x_k_next, 0, (void *)&tmp);
+        
+        tmp = *(double *)vector_get(&x_k, 1) +
+                    *(double *)vector_get(&sol, 1);
+        vector_change(&x_k_next, 1, (void *)&tmp);
 
+        if (vector_diff(&x_k_next, &x_k) < epsilon) break;
+    }    
 
-    } while (vector_diff(&x_k_next, &x_k) > epsilon);
+    *x_0 = *(double *)vector_get(&x_k_next, 0);
+    *y_0 = *(double *)vector_get(&x_k_next, 1);
+
+    matrix_free(&a);
+    vector_free(&x_k);
+    vector_free(&x_k_next);
+    vector_free(&b);
+    vector_free(&sol);
+
+    return 0;
 }
 
 int main(int argc, char **argv) {
-    segm_t b;
+    /*
+    segment_t b;
+    */
     double epsilon, x_0, y_0;
+    /*
     int k, g, n = 16;
-
+    */
 
     if ( argc != 2 ) {
         fprintf(stderr, "Error: Usage: %s database\n", argv[0]);
         return 1;
     }
-    
+    /*    
     printf("Please provide me with an interval:\n");
     scanf("%lf%lf", &b.start, &b.end);
 
@@ -149,49 +217,22 @@ int main(int argc, char **argv) {
         k = sequential_search(&b, n);
     }
 
-    g = newton_method(&b.start, epsilon);
+
+    g = newton_method(&b, epsilon);
     if ( g == 0 ) {
-        printf("%lf\n", b.start);
-    } else if ( g == 1 ) {
-        fprintf(stderr, "Error: The differential of f" 
-                        " has approached near 0 values\n");
-        return 3;
+        printf("%lf %lf\n", b.start, b.end);
     } else if ( g == -1 ) {
-        fprintf(stderr, "Error: Newton's method doesn't converge\n");
+        fprintf(stderr, "Error: Runtime fault contact developer\n");
         return 3;
     }
+    */
 
-    printf("x_0?, y_0?:\n");
-    scanf("%lf%lf", &x_0, &y_0);
+    printf("Give me x_0, y_0, epsilon\n");
+    scanf("%lf%lf%lf", &x_0, &y_0, &epsilon);
 
-/*
-    matrix a;
-    matrix_init(&a, 3, 3, sizeof(double));
-    vector c;
-    vector_init(&c, 3, sizeof(double));
-    vector sol;
-    vector_init(&sol, 3, sizeof(double));
+    newton_method_sys(&x_0, &y_0, epsilon);
 
-
-    printf("Give me matrix\n");
-    for (size_t i = 0; i < a.num_rows; ++i) {
-        for(size_t j = 0; j < a.num_cols; ++j) {
-            double tmp;
-            scanf("%lf", &tmp);
-            matrix_set(&a, i, j, &tmp);
-        }
-    }
-    
-    printf("Give me b vector\n");
-    for (size_t i = 0; i < c.capacity; ++i) {
-        double tmp;
-        scanf("%lf", &tmp);
-        vector_set_grow(&c, i, &tmp);
-    }
-
-    lup(&a, &c, &sol);
-    vector_print(&sol);
-*/
+    printf("%lf %lf\n", x_0, y_0);
 
     return 0;
 }

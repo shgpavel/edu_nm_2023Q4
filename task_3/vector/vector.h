@@ -12,11 +12,10 @@ typedef struct vector_s {
 
 void   vector_init(vector *, size_t, size_t);
 void   vector_init_copy(vector *dest, vector *src);
-void   vector_init_empty(vector *, size_t);
 void   vector_push(vector *, void *);
 void   vector_swap(vector *v, size_t i, size_t j);
-void   vector_set(vector *, size_t, void *);
-void   vector_set_grow(vector *, size_t, void *);
+void   vector_change(vector *, size_t, void *);
+double vector_diff(vector *x, vector *y);
 void   vector_delete(vector *, size_t);
 void*  vector_get(vector *, size_t);
 void   vector_print(vector *v);

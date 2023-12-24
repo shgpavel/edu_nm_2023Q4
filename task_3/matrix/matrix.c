@@ -22,46 +22,58 @@ limitations under the License.
 #include "matrix.h"
 
 
-void matrix_init(matrix *m, size_t num_rows, size_t num_cols, size_t type_size) {
-    m->rows = (vector *)malloc(num_rows * sizeof(vector));
-    m->num_rows = num_rows;
-    m->num_cols = num_cols;
+void matrix_init(matrix *m, size_t rows, size_t type_size) {
+    m->data = (vector *) malloc(sizeof(vector));
+    m->rows = rows;
     m->type_size = type_size;
 
-    for (size_t i = 0; i < num_rows; ++i) {
-        vector_init(&m->rows[i], num_cols, type_size);
-    }
+    vector_init(m->data, m->rows, type_size);
 }
 
 void matrix_init_copy(matrix *dest, matrix *src) {
-    dest->rows = (vector *)malloc(src->num_rows * sizeof(vector));
-    dest->num_rows = src->num_rows;
-    dest->num_cols = src->num_cols;
+    dest->data = (vector *) malloc(sizeof(vector));
+    dest->rows = src->rows;
     dest->type_size = src->type_size;
 
-    for (size_t i = 0; i < src->num_rows; ++i) {
-        vector_init_copy(&dest->rows[i], &src->rows[i]);
+    vector_init_copy(dest->data, src->data);
+}
+
+void matrix_fill_rand(matrix *m) {
+    for (size_t i = 0; i < m->rows; ++i) {
+        for (size_t j = 0; j < m->rows; ++j) {
+            double tmp = i + j;
+            matrix_push(m, (void *)&tmp);
+        }
     }
 }
 
-void matrix_set(matrix *m, size_t row, size_t col, void *data) {
-    if ( row < m->num_rows && col < m->num_cols ) {
-        vector_set_grow(&m->rows[row], col, data);
-    }
+void matrix_push(matrix *m, void *data) {
+    vector_push(m->data, data);
 }
 
 
+void matrix_change(matrix *m, size_t row, size_t col, void *data) {
+    if ( row < m->rows && col < m->rows ) {
+        vector_change(m->data, (row * m->rows) + col, data);
+    }
+}
+
+void matrix_swap(matrix *m, size_t i, size_t j, size_t k, size_t l) {
+    if ( i < m->rows && j < m->rows && k < m->rows && l < m->rows ) {
+        vector_swap(m->data, (i * m->rows + j), (k * m->rows + l));
+    }
+}
 
 void* matrix_get(matrix *m, size_t row, size_t col) {
-    if ( row < m->num_rows && col < m->num_cols ) {
-        return vector_get(&m->rows[row], col);
+    if ( row < m->rows && col < m->rows ) {
+        return vector_get(m->data, (row * m->rows) + col);
     }
     return NULL;
 }
 
 void matrix_print(matrix *m) {
-    for (size_t i = 0; i < m->num_rows; ++i) {
-        for (size_t j = 0; j < m->num_cols; ++j) {
+    for (size_t i = 0; i < m->rows; ++i) {
+        for (size_t j = 0; j < m->rows; ++j) {
             printf("%lf ", *(double *)matrix_get(m, i, j));
         }
         printf("\n");
@@ -70,11 +82,8 @@ void matrix_print(matrix *m) {
 }
 
 void matrix_free(matrix *m) {
-    for (size_t i = 0; i < m->num_rows; ++i) {
-        vector_free(&m->rows[i]);
-    }
-    free(m->rows);
-    m->num_rows = 0;
-    m->num_cols = 0;
+    vector_free(m->data);
+    free(m->data);
+    m->rows = 0;
     m->type_size = 0;
 }

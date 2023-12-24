@@ -20,24 +20,22 @@ limitations under the License.
 #include "../vector/vector.h"
 #include "../matrix/matrix.h"
 
-void lup(matrix *m, vector *c, vector *solution) {
-    matrix a;
-    matrix_init_copy(&a, m);
-    vector b;
-    vector_init_copy(&b, c);
-
+void lup(matrix *a, vector *b, vector *solution) {
     
     vector perm;
-    vector_init(&perm, a.num_rows, sizeof(size_t));
-    for (size_t i = 0; i < a.num_rows; ++i) {
-        vector_set_grow(&perm, i, &i);
+    vector c;
+
+    vector_init_copy(&c, b);
+    vector_init(&perm, a->rows, sizeof(size_t));
+    for (size_t i = 0; i < a->rows; ++i) {
+        vector_push(&perm, &i);
     }
     
-    for (size_t i = 0; i < a.num_rows; ++i) {
+    for (size_t i = 0; i < a->rows; ++i) {
         double lead = 0;
         size_t swap = i;
-        for (size_t j = i + 1; j < a.num_cols; ++j) {
-            double *a_j_i = (double *)matrix_get(&a, j, i);
+        for (size_t j = i + 1; j < a->rows; ++j) {
+            double *a_j_i = (double *)matrix_get(a, j, i);
             if (fabs(lead) < fabs(*a_j_i)) {
                 lead = *a_j_i;
                 swap = j;
@@ -46,63 +44,59 @@ void lup(matrix *m, vector *c, vector *solution) {
 
         if (swap != i) {
             vector_swap(&perm, i, swap);
-            for (size_t k = 0; k < a.num_cols; ++k) {
-                double *a_i = (double *)matrix_get(&a, i, k);
-                double *a_swap = (double *)matrix_get(&a, swap, k);
-                matrix_set(&a, i, k, (void *)a_swap);
-                matrix_set(&a, swap, k, (void *)a_i);
+            for (size_t k = 0; k < a->rows; ++k) {
+                matrix_swap(a, i, k, swap, k);
             }
         }
         
-        for (size_t j = i + 1; j < a.num_rows; ++j) {
-            double *a_j_i = (double *)matrix_get(&a, j, i);
+        for (size_t j = i + 1; j < a->rows; ++j) {
+            double *a_j_i = (double *)matrix_get(a, j, i);
             double cache = *a_j_i;
             *a_j_i = cache / lead;
-            matrix_set(&a, j, i, (void *)a_j_i);
-            for (size_t k = i + 1; k < a.num_cols; ++k) {
+            matrix_change(a, j, i, (void *)a_j_i);
+            for (size_t k = i + 1; k < a->rows; ++k) {
                 double tmp;
-                double *a_j_k = (double *)matrix_get(&a, j, k);
-                double *a_i_k = (double *)matrix_get(&a, i, k);
+                double *a_j_k = (double *)matrix_get(a, j, k);
+                double *a_i_k = (double *)matrix_get(a, i, k);
                 tmp = *a_j_k - (*a_j_i * *a_i_k);
-                matrix_set(&a, j, k, (void *)&tmp);
+                matrix_change(a, j, k, (void *)&tmp);
             }
         }
     }
-    
-    for (size_t i = 0; i < b.size; ++i) {
-        double *c_perm = (double *)vector_get(c, 
+
+    for (size_t i = 0; i < b->size; ++i) {
+        double *c_perm = (double *)vector_get(&c, 
                          *(size_t *)vector_get(&perm, i));
-        vector_set_grow(&b, i, (void *)c_perm);
+        vector_change(b, i, (void *)c_perm);
     }
 
-
-    for (size_t i = 0; i < a.num_rows; ++i) {
+    for (size_t i = 0; i < a->rows; ++i) {
         for (size_t j = 0; j < i; ++j) {
             double tmp;
-            double *b_i = (double *)vector_get(&b, i);
-            double *b_j = (double *)vector_get(&b, j);
-            double *a_i_j = (double *)matrix_get(&a, i, j);
+            double *b_i = (double *)vector_get(b, i);
+            double *b_j = (double *)vector_get(b, j);
+            double *a_i_j = (double *)matrix_get(a, i, j);
             tmp = *b_i - (*a_i_j * *b_j);
-            vector_set_grow(&b, i, (void *)&tmp);
+            vector_change(b, i, (void *)&tmp);
         }
     }
-    
-    for (size_t i = a.num_rows; i > 0; ) {
+
+    for (size_t i = a->rows; i > 0; ) {
         --i;
-        double *b_i = (double *)vector_get(&b, i);
-        vector_set_grow(solution, i, (void *)b_i);
-        for (size_t j = a.num_rows; j > i + 1; ) {
+        double *b_i = (double *)vector_get(b, i);
+        vector_change(solution, i, (void *)b_i);
+        for (size_t j = a->rows; j > i + 1; ) {
             --j;
             double tmp;
             tmp = *(double *)vector_get(solution, i) - 
-                    (*(double *)matrix_get(&a, i, j) * *(double *)vector_get(solution, j));
-            vector_set_grow(solution, i, (void *)&tmp);
+                    (*(double *)matrix_get(a, i, j) * *(double *)vector_get(solution, j));
+            vector_change(solution, i, (void *)&tmp);
         }
         double tmp;
-        tmp = *(double *)vector_get(solution, i) / *(double *)matrix_get(&a, i, i);
-        vector_set_grow(solution, i, (void *)&tmp);
+        tmp = *(double *)vector_get(solution, i) / *(double *)matrix_get(a, i, i);
+        vector_change(solution, i, (void *)&tmp);
     }
-
-    matrix_free(&a);
-    vector_free(&b);
+   
+    vector_free(&c);
+    vector_free(&perm);
 }

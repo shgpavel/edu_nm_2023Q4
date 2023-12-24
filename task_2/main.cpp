@@ -397,7 +397,7 @@ int main(void) {
             std::cerr << "Error: " << e.what() << '\n';
         }
     }
-    
+
     /*
     test_5();
     */

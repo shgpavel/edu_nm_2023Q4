@@ -1,4 +1,4 @@
-CFLAGS := ${CFLAGS} -Wall -Wextra -O3 -std=c2x
+CFLAGS := -Wall -Wextra -O3 -std=c2x ${CFLAGS}
 
 CC = clang
 LD = clang

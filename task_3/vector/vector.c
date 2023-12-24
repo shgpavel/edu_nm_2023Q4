@@ -21,7 +21,6 @@ limitations under the License.
 
 #include "vector.h"
 
-#define VECTOR_INIT_CAPACITY_ 5
 
 void vector_init(vector *v, size_t capacity, size_t size_type) {
     v->data = (void **) malloc(capacity * sizeof(void *));
@@ -31,21 +30,14 @@ void vector_init(vector *v, size_t capacity, size_t size_type) {
 }
 
 void vector_init_copy(vector *dest, vector *src) {
-    dest->data = (void **)malloc(src->capacity * sizeof(void *));
+    dest->data = (void **) malloc(src->capacity * sizeof(void *));
     dest->size = src->size;
     dest->capacity = src->capacity;
     dest->type_size = src->type_size;
     for (size_t i = 0; i < src->size; ++i) {
-        dest->data[i] = (void *)malloc(src->type_size);
+        dest->data[i] = (void *) malloc(src->type_size);
         memcpy(dest->data[i], src->data[i], src->type_size);
     }
-}
-
-void vector_init_empty(vector *v, size_t size_type) {
-    v->data = (void **) malloc(VECTOR_INIT_CAPACITY_ * sizeof(void *));
-    v->size = 0;
-    v->capacity = VECTOR_INIT_CAPACITY_;
-    v->type_size = size_type;
 }
 
 void vector_resize(vector *v, size_t new_capacity) {
@@ -55,9 +47,11 @@ void vector_resize(vector *v, size_t new_capacity) {
 
 void vector_swap(vector *v, size_t i, size_t j) {
     if (i < v->size && j < v->size) {
-        void *tmp = v->data[i];
-        v->data[i] = v->data[j];
-        v->data[j] = tmp;
+        void *tmp = (void *) malloc(v->type_size);
+        memcpy(tmp, v->data[i], v->type_size);
+        memcpy(v->data[i], v->data[j], v->type_size);
+        memcpy(v->data[j], tmp, v->type_size);
+        free(tmp);
     }
 }
 
@@ -68,26 +62,13 @@ void vector_push(vector *v, void *atad) {
 
     v->data[v->size] = (void *) malloc(v->type_size);
     memcpy(v->data[v->size], atad, v->type_size);
-
     v->size++;
 }
 
-void vector_set(vector *v, size_t index, void *atad) {
+void vector_change(vector *v, size_t index, void *atad) {
     if ( index < v->size ) {
         memcpy(v->data[index], atad, v->type_size);
     }
-}
-
-void vector_set_grow(vector *v, size_t index, void *atad) {
-    if ( index >= v->size ) {
-        while ( index >= v->capacity ) {
-            vector_resize(v, v->capacity + v->capacity / 2);
-        }
-        v->size = index + 1;
-    }
-
-    v->data[index] = (void *)malloc(v->type_size);
-    memcpy(v->data[index], atad, v->type_size);
 }
 
 double vector_diff(vector *x, vector *y) {
@@ -109,7 +90,6 @@ void vector_delete(vector *v, size_t index) {
         for (size_t i = index; i < v->size; ++i) {
             v->data[i] = v->data[i + 1];
         }
-        vector_resize(v, v->size - 1);
         v->size--;
     }
 }
