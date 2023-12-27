@@ -38,10 +38,10 @@ void matrix_init_copy(matrix *dest, matrix *src) {
     vector_init_copy(dest->data, src->data);
 }
 
-void matrix_fill_rand(matrix *m) {
+void matrix_fill_zero(matrix *m) {
     for (size_t i = 0; i < m->rows; ++i) {
         for (size_t j = 0; j < m->rows; ++j) {
-            double tmp = i + j;
+            double tmp = 0.0;
             matrix_push(m, (void *)&tmp);
         }
     }

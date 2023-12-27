@@ -385,11 +385,10 @@ void test_5() {
 */
 
 int main(void) {
-
     while(1) {
         try {
             std::string filename;
-            std::cout << "Give me filename: ";
+            std::cout << "Test file path?" << '\n';
             std::cin >> filename;
             parse_test(filename);
             break;

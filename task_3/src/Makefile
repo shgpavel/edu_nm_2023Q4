@@ -6,7 +6,7 @@ LD = clang
 SRCS_DIRS = . lup matrix vector
 SRCS = $(wildcard $(addsuffix /*.c, $(SRCS_DIRS)))
 
-LL = -lm -lsqlite3 -ljemalloc
+LL = -lm -ljemalloc
 
 main: $(SRCS)
 	$(CC) $(SRCS) -o main.o $(LL) $(CFLAGS)

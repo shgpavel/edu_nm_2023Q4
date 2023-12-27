@@ -40,6 +40,13 @@ void vector_init_copy(vector *dest, vector *src) {
     }
 }
 
+void vector_fill_zero(vector *v) {
+    for (size_t i = 0; i < v->capacity; ++i) {
+        double tmp = 0.0;
+        vector_push(v, (void *)&tmp);
+    }
+}
+
 void vector_resize(vector *v, size_t new_capacity) {
     v->capacity = new_capacity;
     v->data = realloc(v->data, new_capacity * sizeof(void *));

@@ -13,6 +13,7 @@ typedef struct vector_s {
 void   vector_init(vector *, size_t, size_t);
 void   vector_init_copy(vector *dest, vector *src);
 void   vector_push(vector *, void *);
+void   vector_fill_zero(vector *v);
 void   vector_swap(vector *v, size_t i, size_t j);
 void   vector_change(vector *, size_t, void *);
 double vector_diff(vector *x, vector *y);

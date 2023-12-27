@@ -18,8 +18,11 @@ limitations under the License.
 #include <math.h>
 
 double factorial(int n) {
-    if (n <= 1) return 1.0;
-    return n * factorial(n - 1);
+    double result = n;
+    for (int i = 1; i < n; ++i) {
+        result *= i;
+    }
+    return result;
 }
 
 double power(double base, int exponent) {
