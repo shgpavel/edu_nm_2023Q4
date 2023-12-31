@@ -24,20 +24,20 @@ limitations under the License.
 int main(void) {
     double lower, upper, step;
     double epsilon_u, epsilon_phi, epsilon_psi;
-    FILE *csvout = fopen("output.csv", "w");
+    FILE *csvout = fopen("out.csv", "w");
 
     if (!csvout) {
         return 1;
     }
 
-    printf( "Provide the input range as two floats:\n" );
-    scanf( "%lf%lf", &lower, &upper );
+    printf("range?\n");
+    scanf("%lf%lf", &lower, &upper);
 
-    printf( "Provide step info:\n" );
-    scanf( "%lf", &step );
+    printf("step?\n");
+    scanf("%lf", &step);
 
-    printf( "Provide epsilons for u func, phi, psi:\n" );
-    scanf( "%lf%lf%lf", &epsilon_u, &epsilon_phi, &epsilon_psi );
+    printf("epsilons u, phi, psi?\n");
+    scanf("%lf%lf%lf", &epsilon_u, &epsilon_phi, &epsilon_psi);
     
     fprintf(csvout, 
             "x, u(x), delta_u, u_(x), delta_u_, phi(x), delta_phi, phi_(x), "
@@ -60,7 +60,7 @@ int main(void) {
                 epsilon_psi, psi_, fabs(psi_ - psi), psi/u, 1e-6, psi_/u_, fabs(psi_/u_ - psi/u));
     }
 
-    printf( "Data saved in output.csv\n" );
+    printf("saved in out.csv\n");
     fclose(csvout);
     
     return 0;

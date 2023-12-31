@@ -21,7 +21,7 @@ limitations under the License.
 
 /*
     If MPI_aux will be calculated in MPI
-    a smth. like race condition will occur
+    a smth like race condition will occur
     with this type of file reading to pass matrices
 */
 

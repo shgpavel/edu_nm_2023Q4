@@ -7,4 +7,4 @@ main: main.c
 	$(CC) main.c funcs.c -o main.o -lm $(CFLAGS)
 
 clean:
-	rm -rf main.o output.csv
+	rm -rf main.o out.csv

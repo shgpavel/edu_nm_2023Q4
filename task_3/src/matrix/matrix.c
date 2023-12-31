@@ -51,7 +51,6 @@ void matrix_push(matrix *m, void *data) {
     vector_push(m->data, data);
 }
 
-
 void matrix_change(matrix *m, size_t row, size_t col, void *data) {
     if ( row < m->rows && col < m->rows ) {
         vector_change(m->data, (row * m->rows) + col, data);

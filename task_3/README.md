@@ -1,17 +1,17 @@
-Содержимое:
-===========
-    src/main.c                   -- задание  
-    src/vector/vector.c          -- вектор с кастомным аллокатором (if ! use libc instead)  
-    src/matrix/matrix.c          -- матрица (уже нормальная как один вектор)  
-    src/lup/lup.c                -- реализация метода LUP разложения  
-    src/test/1                   -- пример данных для теста
+Contains:
+=========
+    src/vector/vector.c          -- vector with jemalloc (if ! use libc instead)
+    src/matrix/matrix.c          -- matrix (only 1 vector is used)
+    src/lup/lup.c                -- LUP-decompose for this vector and matrix
+    src/func/func.c              -- functions for newton method
+    src/test/1                   -- example test data
 
-Зависимости:
-============
-    jemalloc >= 5.3  
+Dependencies:
+=============
+    jemalloc >= 5.3
     clang    >= 15
 
-Сборка:
-=======
-    make                         -- build main.o executable file
-    make clean                   -- rm main.o
+Build:
+======
+    make
+    make clean

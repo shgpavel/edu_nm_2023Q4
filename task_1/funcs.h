@@ -6,5 +6,4 @@ double sinhus(double, double);
 double square_rootPD(double, double);
 double power(double, int);
 
-
 #endif

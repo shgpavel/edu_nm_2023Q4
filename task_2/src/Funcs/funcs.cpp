@@ -16,10 +16,6 @@ limitations under the License.
 
 #include <iostream>
 
-/* 
-    Some my shitty stuff that task file says to include
-*/
-
 double square_root_pd(double num, double epsilon) {
 
     double guess = num;

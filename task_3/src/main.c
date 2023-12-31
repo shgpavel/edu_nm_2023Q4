@@ -17,16 +17,12 @@ limitations under the License.
 #include <stdio.h>
 #include <math.h>
 
+#include "func/func.h"
 #include "vector/vector.h"
 #include "matrix/matrix.h"
 #include "lup/lup.h"
 
-#ifndef M_PI_2
-#define M_PI_2 1.57079632679489661923
-#endif
-
-#define MAX_ITER (~(size_t)0)-1000
-#define STOP_SEQ 5000
+#define STOP_SEQ 10000
 
 
 typedef struct segment {
@@ -34,18 +30,6 @@ typedef struct segment {
     double end;
 } segment_t;
 
-
-double func(double x) {
-    return (tan(M_PI_2 - x) - x);
-}
-
-double func_d(double x) {
-    return (-1.0/(sin(x) * sin(x)) - 1);
-}
-
-double func_d_2(double x) {
-    return (2 * cos(x)/(sin(x) * sin(x) * sin(x)));
-}
 
 int sequential_search(segment_t *a, size_t n) {
     double h = (a->end - a->start)/n;
@@ -60,22 +44,19 @@ int sequential_search(segment_t *a, size_t n) {
     return 1;
 }
 
-
 void secant_method(segment_t *a, double *x) {
     *x = a->start - 
         ((a->end - a->start) * func(a->start))/(func(a->end) - func(a->start));
 }
 
-
 double newton_method(segment_t *a, double x_0, double epsilon) {
-    double x_1 = x_0, tmp;
+    double x_1 = x_0;
 
     while (1) {
         x_0 = x_1;
 
         if ((x_0 > a->end) || (x_0 < a->start)) {
             secant_method(a, &x_1);
-            printf("call\n");
         } else {
             x_1 = x_0 - func(x_0)/func_d(x_0);
         }
@@ -94,32 +75,11 @@ double newton_method(segment_t *a, double x_0, double epsilon) {
     }
 }
 
-
-double func_1_x(double x, double lambda) {
-    return (lambda * sin(x + 1));
-}
-
-double func_1_y(void) {
-    return 2.0;
-}
-
-double func_2_x(void) {
-    return 1.0;
-}
-
-double func_2_y(double y, double lambda) {
-    return (cos(y) * lambda);
-}
-
-double func_1(double x, double y, double lambda) {
-    return ( -2*y + (lambda * cos(x + 1)));
-}
-
-
-double func_2(double x, double y, double lambda) {
-    return (-x - (lambda * sin(y)) - 0.4);
-}
-
+/*
+    Next block is very straightforward solution.
+    Something like control function or flags wrap is needed
+    to prevent lots of memory alloc/free when using automated init approx.
+*/
 
 void newton_method_sys(double *x_0, double *y_0, double epsilon, double lambda) {
     matrix a;
@@ -154,19 +114,23 @@ void newton_method_sys(double *x_0, double *y_0, double epsilon, double lambda) 
         tmp = *(double *)vector_get(&x_k_next, 1);
         vector_change(&x_k, 1, (void *)&tmp);
 
-        tmp = func_1_x(*(double *)vector_get(&x_k, 0), lambda);
+        tmp = func_1_x(*(double *)vector_get(&x_k, 0),
+                        *(double *)vector_get(&x_k, 1), lambda);
         matrix_change(&a, 0, 0, &tmp);
-        tmp = func_1_y();
+        tmp = func_1_y(*(double *)vector_get(&x_k, 0),
+                        *(double *)vector_get(&x_k, 1), lambda);
         matrix_change(&a, 0, 1, &tmp);
-        tmp = func_2_x();
+        tmp = func_2_x(*(double *)vector_get(&x_k, 0),
+                        *(double *)vector_get(&x_k, 1), lambda);
         matrix_change(&a, 1, 0, &tmp);
-        tmp = func_2_y(*(double *)vector_get(&x_k, 1), lambda);
+        tmp = func_2_y(*(double *)vector_get(&x_k, 0),
+                        *(double *)vector_get(&x_k, 1), lambda);
         matrix_change(&a, 1, 1, &tmp);
 
-        tmp = func_1(*(double *)vector_get(&x_k, 0), 
+        tmp = func_1_neg(*(double *)vector_get(&x_k, 0), 
                         *(double *)vector_get(&x_k, 1), lambda);
         vector_change(&b, 0, (void *)&tmp);
-        tmp = func_2(*(double *)vector_get(&x_k, 0), 
+        tmp = func_2_neg(*(double *)vector_get(&x_k, 0), 
                         *(double *)vector_get(&x_k, 1), lambda);
         vector_change(&b, 1, (void *)&tmp);
 
@@ -185,7 +149,7 @@ void newton_method_sys(double *x_0, double *y_0, double epsilon, double lambda) 
             break;
         }
         if (vector_diff(&x_k_next, &x_k) < epsilon) break;
-    }    
+    }
 
     *x_0 = *(double *)vector_get(&x_k_next, 0);
     *y_0 = *(double *)vector_get(&x_k_next, 1);
@@ -211,7 +175,6 @@ void init_approx(double epsilon) {
 
 int main(void) {
     segment_t a;
-
     double epsilon, x_0, y_0;
     int k, n = 16;
 
@@ -224,10 +187,9 @@ int main(void) {
     printf("epsilon value?\n");
     scanf("%lf", &epsilon);
 
-
     k = sequential_search(&a, n); 
-    while ( k == 1 ) {
-        if ( n >= STOP_SEQ ) {
+    while (k == 1) {
+        if (n >= STOP_SEQ) {
             fprintf(stderr,
                 "Error: The provided range does not contain root\n");
             return 2;
@@ -241,7 +203,7 @@ int main(void) {
     printf("%lf %lf %lf\n", a.start, a.end, x_0);
 
 
-    printf("x_0?, y_0?, epsilon?\n");
+    printf("(x_0, y_0, epsilon)?\n");
     scanf("%lf%lf%lf", &x_0, &y_0, &epsilon);
 
     newton_method_sys(&x_0, &y_0, epsilon, 1.0);

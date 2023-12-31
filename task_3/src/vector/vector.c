@@ -21,7 +21,6 @@ limitations under the License.
 
 #include "vector.h"
 
-
 void vector_init(vector *v, size_t capacity, size_t size_type) {
     v->data = (void **) malloc(capacity * sizeof(void *));
     v->size = 0;
@@ -63,7 +62,7 @@ void vector_swap(vector *v, size_t i, size_t j) {
 }
 
 void vector_push(vector *v, void *atad) {
-    if ( v->size >= v->capacity ) {
+    if (v->size >= v->capacity) {
         vector_resize(v, v->capacity + v->capacity / 2);
     }
 
@@ -73,13 +72,13 @@ void vector_push(vector *v, void *atad) {
 }
 
 void vector_change(vector *v, size_t index, void *atad) {
-    if ( index < v->size ) {
+    if (index < v->size) {
         memcpy(v->data[index], atad, v->type_size);
     }
 }
 
 double vector_diff(vector *x, vector *y) {
-    if ( x->size == y->size ) {
+    if (x->size == y->size) {
         double result = 0.0;
         for (size_t i = 0; i < x->size; ++i) {
             result += (*(double *)x->data[i] - *(double *)y->data[i]) *
@@ -92,7 +91,7 @@ double vector_diff(vector *x, vector *y) {
 
 
 void vector_delete(vector *v, size_t index) {
-    if ( index < v->size ) {
+    if (index < v->size) {
         free(vector_get(v, index));
         for (size_t i = index; i < v->size; ++i) {
             v->data[i] = v->data[i + 1];
@@ -102,7 +101,7 @@ void vector_delete(vector *v, size_t index) {
 }
 
 void* vector_get(vector *v, size_t index) {
-    if ( index < v->size ) {
+    if (index < v->size) {
         return v->data[index];
     }
     return NULL;

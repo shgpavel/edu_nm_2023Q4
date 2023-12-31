@@ -1,20 +1,20 @@
-Содержимое:
+Contains:
 ===========
-    src/main.cpp                 -- реализация классов Vector, Matrix + тесты методов  
-    src/MPI/mpi.cpp              -- реализация метода простой итерации
-    src/MS/ms.cpp                -- реализация метода Зейделя
-    src/LUP/lup.cpp              -- реализация метода LUP-разложения
-    src/QR/qr.cpp                -- реализация метода QR-разложения
-    src/EigenWrap/eigen_wrap.cpp -- обёртка библиотеки eigen для классов Vector, Matrix
-    src/Funcs/funcs.cpp          -- вычисление корня методом Герона
-    src/test/1                   -- первые 5 тестов (0-4)
+    src/main.cpp                 -- Class Vector, Matrix impl + tests
+    src/MPI/mpi.cpp              -- Impl of simple iteration method
+    src/MS/ms.cpp                -- Impl of Seidel method
+    src/LUP/lup.cpp              -- LUP-decompose method
+    src/QR/qr.cpp                -- QRH-decompose method
+    src/EigenWrap/eigen_wrap.cpp -- Eigen wrap for classes Vector, Matrix
+    src/Funcs/funcs.cpp          -- Heron's mehod for square root
+    src/test/1                   -- First 5 tests (0-4)
 
-Зависимости:
+Dependencies:
 ============
     eigen >= 3.4
     clang >= 15
 
-Сборка:
+Build:
 =======
-    make                         -- build main.o executable file
-    make clean                   -- rm main.o
+    make
+    make clean
