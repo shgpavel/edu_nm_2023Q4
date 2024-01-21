@@ -89,6 +89,13 @@ double vector_diff(vector *x, vector *y) {
     return 0.0;
 }
 
+void vector_assign(vector *v, vector *c) {
+    if (v->size == c->size) {
+        for (size_t i = 0; i < v->size; ++i) {
+            vector_change(v, i, vector_get(c, i));
+        }
+    }
+}
 
 void vector_delete(vector *v, size_t index) {
     if (index < v->size) {

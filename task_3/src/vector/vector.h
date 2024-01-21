@@ -17,6 +17,7 @@ void   vector_fill_zero(vector *v);
 void   vector_swap(vector *v, size_t i, size_t j);
 void   vector_change(vector *, size_t, void *);
 double vector_diff(vector *x, vector *y);
+void   vector_assign(vector *v, vector *c);
 void   vector_delete(vector *, size_t);
 void*  vector_get(vector *, size_t);
 void   vector_print(vector *v);

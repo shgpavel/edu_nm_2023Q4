@@ -27,7 +27,7 @@ void matrix_init(matrix *m, size_t rows, size_t type_size) {
     m->rows = rows;
     m->type_size = type_size;
 
-    vector_init(m->data, m->rows, type_size);
+    vector_init(m->data, m->rows * m->rows, type_size);
 }
 
 void matrix_init_copy(matrix *dest, matrix *src) {
