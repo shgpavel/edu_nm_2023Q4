@@ -6,7 +6,8 @@ typedef struct pair_s {
   double b;
 } pair;
 
-#define unw_double(ptr) (*(double *) (ptr))
-#define unw_pair(ptr) (*(pair *) (ptr))
+
+#define unwrap_double(ptr) (*(double *) (ptr))
+#define unwrap_pair(ptr) (*(pair *) (ptr))
 
 #endif

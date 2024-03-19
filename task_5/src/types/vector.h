@@ -3,10 +3,10 @@
 
 
 typedef struct vector_s {
-    void **data;
-    size_t size;
-    size_t capacity;
-    size_t type_size;
+  void **data;
+  size_t size;
+  size_t capacity;
+  size_t type_size;
 } vector;
 
 
@@ -21,7 +21,7 @@ void   vector_assign(vector *v, vector *c);
 void   vector_delete(vector *, size_t);
 void*  vector_get(vector *, size_t);
 void   vector_print(vector *v);
-void   vector_print_pairs(vector *v);
+//void   vector_print_pairs(vector *v);
 void   vector_free(vector *);
 
 

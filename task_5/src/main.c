@@ -1,30 +1,45 @@
-/*
-Copyright 2024 Pavel Shago
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 #include <stdio.h>
 #include <math.h>
 
 #include "types/vector.h"
-#include "types/matrix.h"
-#include "types/dot.h"
-#include "types/linked_list.h"
-#include "methods/lup.h"
+#include "methods/polynoms.h"
+//#include "types/matrix.h"
+//#include "methods/lup.h"
 
 
 int main(void) {
 
-    return 0;
+  size_t s_1, s_2;
+  vector p_1, p_2;
+
+  printf("poly degs?\n");
+  scanf("%zu", &s_1);
+  scanf("%zu", &s_2);
+
+  vector_init(&p_1, s_1 + 1, sizeof(double));
+  vector_init(&p_2, s_2 + 1, sizeof(double));
+
+  printf("first poly?\n");
+  for (size_t i = 0; i <= s_1; ++i) {
+    double tmp;
+    scanf("%lf", &tmp);
+    vector_push(&p_1, &tmp);
+  }
+
+  printf("sec poly?\n");
+  for (size_t i = 0; i <= s_2; ++i) {
+    double tmp;
+    scanf("%lf", &tmp);
+    vector_push(&p_2, &tmp);
+  }
+
+  vector result = poly_mult(&p_1, &p_2);
+
+  vector_print(&result);
+
+  vector_free(&p_1);
+  vector_free(&p_2);
+  vector_free(&result);
+
+  return 0;
 }
