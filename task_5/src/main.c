@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "types/vector.h"
+#include "types/matrix.h"
 #include "methods/polynoms.h"
-//#include "types/matrix.h"
-//#include "methods/lup.h"
-
+#include "methods/lup.h"
+#include "draw/draw.h"
 
 int main(void) {
 
@@ -34,8 +35,9 @@ int main(void) {
   }
 
   vector result = poly_mult(&p_1, &p_2);
-
   vector_print(&result);
+
+  draw(&result);
 
   vector_free(&p_1);
   vector_free(&p_2);

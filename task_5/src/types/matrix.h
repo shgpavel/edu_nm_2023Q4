@@ -4,9 +4,9 @@
 #include "vector.h"
 
 typedef struct matrix_s {
-    vector *data;
-    size_t rows;
-    size_t type_size;
+  vector *data;
+  size_t rows;
+  size_t type_size;
 } matrix;
 
 void  matrix_init(matrix *, size_t, size_t);

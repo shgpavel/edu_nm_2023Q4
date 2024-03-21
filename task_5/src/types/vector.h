@@ -1,7 +1,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-
 typedef struct vector_s {
   void **data;
   size_t size;
@@ -9,20 +8,19 @@ typedef struct vector_s {
   size_t type_size;
 } vector;
 
-
 void   vector_init(vector *, size_t, size_t);
-void   vector_init_copy(vector *dest, vector *src);
+void   vector_init_copy(vector *, vector *);
 void   vector_push(vector *, void *);
-void   vector_fill_zero(vector *v);
-void   vector_swap(vector *v, size_t i, size_t j);
+void   vector_fill_zero(vector *);
+void   vector_swap(vector *, size_t, size_t);
 void   vector_change(vector *, size_t, void *);
-double vector_diff(vector *x, vector *y);
-void   vector_assign(vector *v, vector *c);
+void   vector_sum(vector *, vector *);
+double vector_diff(vector *, vector *);
+void   vector_assign(vector *, vector *);
 void   vector_delete(vector *, size_t);
 void*  vector_get(vector *, size_t);
-void   vector_print(vector *v);
-//void   vector_print_pairs(vector *v);
+void   vector_print(vector *);
+//void   vector_print_pairs(vector *);
 void   vector_free(vector *);
-
 
 #endif

@@ -7,7 +7,4 @@ typedef struct pair_s {
 } pair;
 
 
-#define unwrap_double(ptr) (*(double *) (ptr))
-#define unwrap_pair(ptr) (*(pair *) (ptr))
-
 #endif
