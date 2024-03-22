@@ -34,7 +34,7 @@ int main(void) {
 
   vector result = poly_mult(&p_1, &p_2);
 
-  draw(&result);
+  FILE *f = draw_init(&result);
 
   vector_free(&p_1);
   vector_free(&p_2);
@@ -65,11 +65,16 @@ int main(void) {
 
   vector result_ = poly_mult(&pol_1, &pol_2);
 
-  draw(&result_);
+  draw_another(&result_, f);
+
+  char *func = "tan(pi/2 - x) - x";
+  draw_func(func, f);
+  draw_last(&result_, f);
 
   vector_free(&pol_1);
   vector_free(&pol_2);
   vector_free(&result_);
+
 
   return 0;
 }

@@ -86,14 +86,13 @@ vector poly_mult_n2(vector *poly_1, vector *poly_2) {
 }
 */
 
-/*
 vector lagrange_poly(vector *points) {
   vector result;
   vector_init(&result, points->size, sizeof(double));
   vector_fill_zero(&result);
 
   for (size_t i = 0; i < points->size; ++i) {
-   vector_sum(result, poly_mult() * unwrap_pair(vector_get(points, i)).b);
+    
+    vector_sum(result, vector_mult(v, unwrap_pair(vector_get(points, i)).b));
   }
 }
-*/

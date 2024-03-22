@@ -73,6 +73,14 @@ void vector_sum(vector *v, vector *d) {
   }
 }
 
+void vector_mult(vector *v, double a) {
+  if (v->type_size == sizeof(double)) {
+    for (size_t i = 0; i < v->size; ++i) {
+      unwrap_double(vector_get(v, i)) *= a;
+    }
+  }
+}
+
 double vector_diff(vector *x, vector *y) {
   if (x->size == y->size) {
 	  double result = 0.0;
