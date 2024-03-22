@@ -1,6 +1,8 @@
 #ifndef FUNC_C
 #define FUNC_C
 
+#include <math.h>
+
 #include "../common.h"
 
 inline double func(double x) {

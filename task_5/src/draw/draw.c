@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "../common.h"
 #include "../types/vector.h"
 
-#define str_limit 20000
+#define str_limit 39000
 
-int draw(vector *target) {
-  static int is_window = 0;
+int draw(vector *target, int num) {
+  static char *helv[str_limit] = malloc(50 * str_limit);
+  static int j = 1;
+
   char equation[str_limit];
   char *ptr = equation;
 
@@ -22,16 +23,28 @@ int draw(vector *target) {
       ptr += strlen(ptr);
     }
   }
-  printf("%s\n", equation);
+  ++j;
 
-  FILE *gnuplotPipe = popen("gnuplot -persistent", "w");
-  if (!gnuplotPipe) {
-    fprintf(stderr, "Error: Could not draw a GNU Plot graph\n");
-    return -1;
+
+  if (window == 0) {
+    FILE *gnuplotPipe = popen("gnuplot -persistent", "w");
+    if (!gnuplotPipe) {
+      fprintf(stderr, "Error: Could not draw a GNU Plot graph\n");
+      return -1;
+    }
+
+    fprintf(gnuplotPipe, "set xlabel 'x'\n");
+    fprintf(gnuplotPipe, "set ylabel 'y'\n");
+    fprintf(gnuplotPipe, "set grid\n");
+    fprintf(gnuplotPipe, "set term x11 title 'Graph'\n");
   }
-  fprintf(gnuplotPipe, "set term x11 title 'Graph'\n");
+
   fprintf(gnuplotPipe, "plot %s with lines smooth csplines\n", equation);
   fflush(gnuplotPipe);
+  
+  if (window == -1) {
+    pclose(gnuplotPipe);
+  }
 
   return 0;
 }

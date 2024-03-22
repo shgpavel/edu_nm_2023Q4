@@ -10,6 +10,7 @@ Dependencies:
 =============
     jemalloc >= 5.3
     clang    >= 15
+    gnuc
 
 Build:
 ======
