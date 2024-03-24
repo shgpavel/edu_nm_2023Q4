@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Wextra -O3 -std=gnu2x ${CFLAGS}
+CFLAGS := -Wall -Wextra -O0 -std=gnu2x ${CFLAGS}
 
 CC = clang
 LD = clang

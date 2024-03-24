@@ -5,6 +5,7 @@
 
 #include "../common.h"
 #include "../types/vector.h"
+#include "../types/pair.h"
 
 void fft(complex double *x, size_t n, size_t inverse) {
   if (n <= 1) return;
@@ -65,34 +66,42 @@ vector poly_mult(vector *poly_1, vector *poly_2) {
   return result;
 }
 
-/*
-vector poly_mult_n2(vector *poly_1, vector *poly_2) {
-  vector result;
-  vector_init(&result, poly_1->size + poly_2->size - 1, sizeof(double));
-  vector_fill_zero(&result);
-
-   for (size_t i = 0; i < poly_1->size; ++i) {
-    for (size_t j = 0; j < poly_2->size; ++j) {
-      size_t degree = i + j;
-      double coef = 
-        unwrap_double(vector_get(poly_1, i)) * 
-        unwrap_double(vector_get(poly_2, j));
-      coef += unwrap_double(vector_get(&result, degree));
-      vector_change(&result, degree, (void *)&coef);
-    }
-  }
-
-  return result;
-}
-*/
-
 vector lagrange_poly(vector *points) {
-  vector result;
+  vector result, v, tmp;
   vector_init(&result, points->size, sizeof(double));
+  vector_init(&tmp, 2, sizeof(double));
+  vector_init(&v, 2, sizeof(double));
   vector_fill_zero(&result);
 
+  double tmp_ = 0;
+  vector_push(&tmp, &tmp_);
+  tmp_ = 1;
+  vector_push(&tmp, &tmp_);
+  
   for (size_t i = 0; i < points->size; ++i) {
-    
-    vector_sum(result, vector_mult(v, unwrap_pair(vector_get(points, i)).b));
+    for (size_t j = 0; j < points->size; ++j) {
+      if (j != i) {
+        tmp_ = -(unwrap_pair(vector_get(points, i)).a);
+        vector_change(&tmp, 0, &tmp_);
+      } 
+      if (j == 0) {
+        vector_assign(&v, &tmp);
+      } else if (j != i) {
+        vector_print(&v);
+        vector_print(&tmp);
+        vector cache = poly_mult(&v, &tmp);
+        //vector_assign(&v, &cache);
+        vector_free(&cache);
+        /*vector_mult(&v,
+            unwrap_pair(vector_get(points, i)).a - unwrap_pair(vector_get(points, j)).a);
+      */}
+    }
+    vector_mult(&v, unwrap_pair(vector_get(points, i)).b);
+    vector_sum(&result, &v);
   }
+
+  vector_free(&tmp);
+  vector_free(&v);
+  vector_print(&result);
+  return result;
 }

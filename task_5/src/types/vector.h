@@ -21,7 +21,7 @@ void   vector_assign(vector *, vector *);
 void   vector_delete(vector *, size_t);
 void*  vector_get(vector *, size_t);
 void   vector_print(vector *);
-//void   vector_print_pairs(vector *);
+void   vector_print_pairs(vector *);
 void   vector_free(vector *);
 
 #endif

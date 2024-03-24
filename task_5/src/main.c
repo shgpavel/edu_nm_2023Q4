@@ -2,12 +2,16 @@
 
 #include "types/vector.h"
 #include "types/matrix.h"
+#include "types/pair.h"
 #include "methods/polynoms.h"
 #include "methods/lup.h"
 #include "draw/draw.h"
 
-int main(void) {
+#include "common.h"
 
+int main(void) {
+  
+  /*
   size_t s_1, s_2;
   vector p_1, p_2;
 
@@ -74,7 +78,37 @@ int main(void) {
   vector_free(&pol_1);
   vector_free(&pol_2);
   vector_free(&result_);
+  */
 
+  size_t s;
+  scanf("%zu", &s);
+  
+  vector points;
+  vector_init(&points, s, sizeof(pair));
+
+  for (size_t i = 0; i < s; ++i) {
+    pair tmp;
+    scanf("%lf", &tmp.a);
+    vector_push(&points, &tmp);
+  }
+
+  for (size_t i = 0; i < s; ++i) {
+    double tmp;
+    scanf("%lf", &tmp);
+    pair tmp_;
+    tmp_.b = tmp;
+    tmp_.a = unwrap_pair(vector_get(&points, i)).a;
+    vector_change(&points, i, &tmp_);
+  }
+  
+  vector_print_pairs(&points);
+
+  
+  vector res = lagrange_poly(&points);
+  vector_print(&res);
+
+  vector_free(&res);
+  vector_free(&points);
 
   return 0;
 }

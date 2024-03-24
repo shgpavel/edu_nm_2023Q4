@@ -3,8 +3,9 @@
 #include <math.h>
 #include <jemalloc/jemalloc.h>
 
-#include "../common.h"
 #include "vector.h"
+#include "pair.h"
+#include "../common.h"
 
 void vector_init(vector *v, size_t capacity, size_t size_type) {
   v->data = (void **) malloc(capacity * sizeof(void *));
@@ -127,14 +128,12 @@ void vector_print(vector *v) {
   }
 }
 
-/*
 void vector_print_pairs(vector *v) {
 	for (size_t i = 0; i < v->size; ++i) {
 		printf("(%g, %g)\n", unwrap_pair(vector_get(v, i)).a,
 		                      unwrap_pair(vector_get(v, i)).b);
 	}
 }
-*/
 
 void vector_free(vector *v) {
   for (size_t i = 0; i < v->size; ++i) {
