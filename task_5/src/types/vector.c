@@ -66,10 +66,11 @@ void vector_change(vector *v, size_t index, void *atad) {
 }
 
 void vector_sum(vector *v, vector *d) {
-  if (v->size == d->size && v->type_size == d->type_size) {
-    for (size_t i = 0; i < v->size; ++i) {
-      unwrap_double(vector_get(v, i)) = unwrap_double(vector_get(v, i)) +
-                                        unwrap_double(vector_get(d, i));
+  if (v->type_size == d->type_size) {
+    size_t min_size = (v->size < d->size) ? v->size : d->size;
+    for (size_t i = 0; i < min_size; ++i) {
+      unwrap_double(vector_get(v, i)) = 
+        unwrap_double(vector_get(v, i)) + unwrap_double(vector_get(d, i));
     }
   }
 }
@@ -95,11 +96,20 @@ double vector_diff(vector *x, vector *y) {
 }
 
 void vector_assign(vector *v, vector *c) {
-  if (v->size == c->size) {
-	  for (size_t i = 0; i < v->size; ++i) {
-	    vector_change(v, i, vector_get(c, i));
-	  }
-  }
+	if (v->size > c->size) {
+    vector_free(v);
+    vector_init_copy(v, c);
+  } else {
+
+  for (size_t i = 0; i < v->size; ++i) {
+	  vector_change(v, i, vector_get(c, i));
+	}
+  
+  if (v->size < c->size) {
+    for (size_t i = v->size; i < c->size; ++i) {
+      vector_push(v, vector_get(c, i));
+    }
+  }}
 }
 
 void vector_delete(vector *v, size_t index) {

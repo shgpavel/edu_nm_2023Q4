@@ -2,10 +2,10 @@
 #define VECTOR_H
 
 typedef struct vector_s {
-  void **data;
   size_t size;
   size_t capacity;
   size_t type_size;
+  void **data;
 } vector;
 
 void   vector_init(vector *, size_t, size_t);

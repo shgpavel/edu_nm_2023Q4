@@ -101,8 +101,7 @@ int main(void) {
     vector_change(&points, i, &tmp_);
   }
   
-  vector_print_pairs(&points);
-
+  //vector_print_pairs(&points);
   
   vector res = lagrange_poly(&points);
   vector_print(&res);

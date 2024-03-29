@@ -67,41 +67,44 @@ vector poly_mult(vector *poly_1, vector *poly_2) {
 }
 
 vector lagrange_poly(vector *points) {
-  vector result, v, tmp;
+  vector result, tmp, v;
   vector_init(&result, points->size, sizeof(double));
   vector_init(&tmp, 2, sizeof(double));
   vector_init(&v, 2, sizeof(double));
   vector_fill_zero(&result);
-
-  double tmp_ = 0;
-  vector_push(&tmp, &tmp_);
-  tmp_ = 1;
-  vector_push(&tmp, &tmp_);
+  vector_fill_zero(&tmp);
+  vector_fill_zero(&v);
+  
+  double tmp_num;
+  tmp_num = 1;
+  vector_change(&tmp, 1, &tmp_num);
   
   for (size_t i = 0; i < points->size; ++i) {
     for (size_t j = 0; j < points->size; ++j) {
-      if (j != i) {
-        tmp_ = -(unwrap_pair(vector_get(points, i)).a);
-        vector_change(&tmp, 0, &tmp_);
-      } 
-      if (j == 0) {
+      if (j == i) continue;
+      
+      tmp_num = -(unwrap_pair(vector_get(points, j)).a);
+      vector_change(&tmp, 0, &tmp_num);
+      
+      if (j == 0 || (j == 1 && i == 0)) {
         vector_assign(&v, &tmp);
-      } else if (j != i) {
-        vector_print(&v);
-        vector_print(&tmp);
-        vector cache = poly_mult(&v, &tmp);
-        //vector_assign(&v, &cache);
-        vector_free(&cache);
-        /*vector_mult(&v,
-            unwrap_pair(vector_get(points, i)).a - unwrap_pair(vector_get(points, j)).a);
-      */}
+      } else {
+        v = poly_mult(&v, &tmp);
+      } 
+    }
+
+    for (size_t j = 0; j < points->size; ++j) {
+      if (j != i) {
+        vector_mult(&v, 
+        1 / (unwrap_pair(vector_get(points, i)).a -
+        unwrap_pair(vector_get(points, j)).a));
+      }
     }
     vector_mult(&v, unwrap_pair(vector_get(points, i)).b);
     vector_sum(&result, &v);
   }
-
-  vector_free(&tmp);
+  
   vector_free(&v);
-  vector_print(&result);
+  vector_free(&tmp);
   return result;
 }
