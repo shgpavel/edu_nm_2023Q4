@@ -5,7 +5,7 @@
 #include "../common.h"
 #include "../types/vector.h"
 
-#define str_limit 39000
+#define str_limit 20000
 
 char *go_str(vector *target) {
   char *equation = malloc(str_limit);
@@ -24,24 +24,6 @@ char *go_str(vector *target) {
   return equation; 
 }
 
-void draw_func(char *p, FILE *stream) {
-  fprintf(stream, "%s, ", p);
-}
-
-void draw_another(vector *target, FILE *stream) {
-  char *p = go_str(target);
-  fprintf(stream, "%s, ", p);
-  free(p);
-}
-
-void draw_last(vector *target, FILE *stream) {
-  char *p = go_str(target);
-  fprintf(stream, "%s\n", p);
-  fflush(stream);
-  free(p);
-  pclose(stream);
-}
-
 FILE* draw_init(vector *target) {
   char *p = go_str(target);
  
@@ -56,8 +38,31 @@ FILE* draw_init(vector *target) {
   fprintf(gnuplotPipe, "set grid\n");
   fprintf(gnuplotPipe, "set term x11 title 'Graph'\n");
 
-  fprintf(gnuplotPipe, "plot %s, ", p);
- 
+  fprintf(gnuplotPipe, "plot %s", p);
   free(p);
   return gnuplotPipe;
+}
+
+void draw_func(char *p, FILE *stream) {
+  fprintf(stream, ", %s", p);
+}
+
+void draw_another(vector *target, FILE *stream) {
+  char *p = go_str(target);
+  fprintf(stream, ", %s", p);
+  free(p);
+}
+
+void draw_last(vector *target, FILE *stream) {
+  char *p = go_str(target);
+  fprintf(stream, ", %s\n", p);
+  fflush(stream);
+  free(p);
+  pclose(stream);
+}
+
+void draw_close(FILE *stream) {
+  fprintf(stream, "\n");
+  fflush(stream);
+  pclose(stream);
 }

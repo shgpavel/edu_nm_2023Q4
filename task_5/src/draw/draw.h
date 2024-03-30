@@ -2,8 +2,9 @@
 #define DRAW_H
 
 FILE* draw_init(vector *);
-void draw_another(vector *target, FILE *stream);
-void draw_last(vector *target, FILE *stream);
-void draw_func(char *p, FILE *stream);
+void draw_another(vector *, FILE *);
+void draw_last(vector *, FILE *);
+void draw_func(char *, FILE *);
+void draw_close(FILE *);
 
 #endif
