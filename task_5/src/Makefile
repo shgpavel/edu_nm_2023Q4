@@ -6,7 +6,7 @@ LD = clang
 SRCS_DIRS = . methods types funcs draw
 SRCS = $(wildcard $(addsuffix /*.c, $(SRCS_DIRS)))
 
-LL = -lm -ljemalloc
+LL = -lm -ljemalloc -lcurl
 
 main: $(SRCS)
 	$(CC) $(SRCS) -o main.o $(LL) $(CFLAGS)

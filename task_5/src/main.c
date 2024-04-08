@@ -36,11 +36,8 @@ int main(void) {
 
   vector_free(&points);
   
-  FILE *f = draw_init(&res);
-  char *func = "tan(pi/2 - x) - x";
-  draw_func(func, f);
-  draw_close(f);
-
+  add_func(&res);
+  plot();
 
   vector_free(&res);
 
