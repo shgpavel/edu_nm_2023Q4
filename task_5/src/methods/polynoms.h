@@ -1,8 +1,9 @@
-#ifndef POLY_H
-#define POLY_H
+#ifndef POLYNOMS_H
+#define POLYNOMS_H
 
-vector poly_mult(vector *poly_1, vector *poly_2);
-vector lagrange_poly(vector *points);
-vector newton_poly(vector *points);
+#include "../types/vector.h"
+
+vector poly_mult(vector *, vector *);
+void   poly_sum(vector *, vector *);
 
 #endif

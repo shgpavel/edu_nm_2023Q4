@@ -65,16 +65,6 @@ void vector_change(vector *v, size_t index, void *atad) {
   }
 }
 
-void vector_sum(vector *v, vector *d) {
-  if (v->type_size == d->type_size) {
-    size_t min_size = (v->size < d->size) ? v->size : d->size;
-    for (size_t i = 0; i < min_size; ++i) {
-      unwrap_double(vector_get(v, i)) = 
-        unwrap_double(vector_get(v, i)) + unwrap_double(vector_get(d, i));
-    }
-  }
-}
-
 void vector_mult(vector *v, double a) {
   if (v->type_size == sizeof(double)) {
     for (size_t i = 0; i < v->size; ++i) {
@@ -84,7 +74,10 @@ void vector_mult(vector *v, double a) {
 }
 
 double vector_diff(vector *x, vector *y) {
-  if (x->size == y->size) {
+  if (x->size == y->size && 
+      (y->type_size == sizeof(double)) &&
+      (x->type_size == sizeof(double))
+      ) {
 	  double result = 0.0;
 	  for (size_t i = 0; i < x->size; ++i) {
 	    result += (unwrap_double(x->data[i]) - unwrap_double(y->data[i])) *
@@ -130,7 +123,7 @@ void* vector_get(vector *v, size_t index) {
 }
 
 void vector_print(vector *v) {
-  if (v != NULL) {
+  if (v != NULL && v->type_size == sizeof(double)) {
 	  for (size_t i = 0; i < v->size; ++i) {
 	    printf("%g ", unwrap_double(vector_get(v, i)));
     }
@@ -139,10 +132,11 @@ void vector_print(vector *v) {
 }
 
 void vector_print_pairs(vector *v) {
+  if (v->type_size == sizeof(pair)) {
 	for (size_t i = 0; i < v->size; ++i) {
 		printf("(%g, %g)\n", unwrap_pair(vector_get(v, i)).a,
 		                      unwrap_pair(vector_get(v, i)).b);
-	}
+	}}
 }
 
 void vector_free(vector *v) {

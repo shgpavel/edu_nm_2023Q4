@@ -4,45 +4,37 @@
 #include "types/matrix.h"
 #include "types/pair.h"
 #include "methods/polynoms.h"
+#include "methods/lagrange.h"
+#include "methods/newton.h"
 #include "methods/lup.h"
 #include "draw/draw.h"
+#include "func/func.h"
 
 #include "common.h"
 
+#define interval_l 1.542
+
 int main(void) {
-  size_t s;
-  scanf("%zu", &s);
-  
-  vector points;
-  vector_init(&points, s, sizeof(pair));
+ 
+  /* evenly distributed nodes */
+  for (size_t s = 60; s <= 61; ++s) {
+    vector points;
+    vector_init(&points, s, sizeof(pair));
+    for (size_t i = 0; i < s; ++i) {
+      double point = 1.0 + (double)i * (interval_l / (double)(s - 1));
+      pair point_p = {point, func(point)};
+      vector_push(&points, (void *)&point_p);
+    }
+    vector_print(&points);
 
-  for (size_t i = 0; i < s; ++i) {
-    pair tmp;
-    scanf("%lf", &tmp.a);
-    vector_push(&points, &tmp);
+    vector *res = lagrange_poly(&points);
+    vector_print(res);
+    vector_free(&points);
+    
+    add_func(res);
+    vector_free(res);
   }
 
-  for (size_t i = 0; i < s; ++i) {
-    double tmp;
-    scanf("%lf", &tmp);
-    pair tmp_;
-    tmp_.b = tmp;
-    tmp_.a = unwrap_pair(vector_get(&points, i)).a;
-    vector_change(&points, i, &tmp_);
-  }
-  
-  vector res = lagrange_poly(&points);
-  vector_print(&res);
-
-  vector_free(&points);
-  
-  add_func(&res);
   plot();
-
-  vector_free(&res);
-
-  res = lagrange_poly(&points);
-  vector_print(&res);
-  vector_free(&res);
   return 0;
 }

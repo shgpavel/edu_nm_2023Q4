@@ -1,13 +1,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <jemalloc/jemalloc.h>
-//#include <stdlib.h>
 #include <curl/curl.h>
 
 #include "../common.h"
 #include "../types/vector.h"
 
-#define str_limit 20000
+#define str_limit 3000
 
 char *go_str(vector *target) {
   char *equation = malloc(str_limit);

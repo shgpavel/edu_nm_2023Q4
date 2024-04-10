@@ -6,5 +6,4 @@ typedef struct pair_s {
   double b;
 } pair;
 
-
 #endif

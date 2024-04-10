@@ -66,64 +66,12 @@ vector poly_mult(vector *poly_1, vector *poly_2) {
   return result;
 }
 
-vector lagrange_poly(vector *points) {
-  vector result, tmp, v;
-  vector_init(&result, points->size, sizeof(double));
-  vector_init(&tmp, 2, sizeof(double));
-  vector_init(&v, 2, sizeof(double));
-  vector_fill_zero(&result);
-  vector_fill_zero(&tmp);
-  vector_fill_zero(&v);
-  
-  double tmp_num;
-  tmp_num = 1;
-  vector_change(&tmp, 1, &tmp_num);
-  
-  for (size_t i = 0; i < points->size; ++i) {
-    for (size_t j = 0; j < points->size; ++j) {
-      if (j == i) continue;
-      
-      tmp_num = -(unwrap_pair(vector_get(points, j)).a);
-      vector_change(&tmp, 0, &tmp_num);
-      
-      if (j == 0 || (j == 1 && i == 0)) {
-        vector_assign(&v, &tmp);
-      } else {
-        v = poly_mult(&v, &tmp);
-      } 
+void poly_sum(vector *v, vector *d) {
+  if (v->type_size == d->type_size) {
+    size_t min_size = (v->size < d->size) ? v->size : d->size;
+    for (size_t i = 0; i < min_size; ++i) {
+      unwrap_double(vector_get(v, i)) = 
+        unwrap_double(vector_get(v, i)) + unwrap_double(vector_get(d, i));
     }
-
-    for (size_t j = 0; j < points->size; ++j) {
-      if (j != i) {
-        vector_mult(&v, 
-        1 / (unwrap_pair(vector_get(points, i)).a -
-        unwrap_pair(vector_get(points, j)).a));
-      }
-    }
-    vector_mult(&v, unwrap_pair(vector_get(points, i)).b);
-    vector_sum(&result, &v);
   }
-  
-  vector_free(&v);
-  vector_free(&tmp);
-  return result;
-}
-
-inline double div_diff(vector *points, size_t i, size_t j) {
-  return ((unwrap_pair(vector_get(points, i)).b
-      - unwrap_pair(vector_get(points, j)).b)
-      / (unwrap_pair(vector_get(points, i)).a
-        - unwrap_pair(vector_get(points, j)).a));
-}
-
-vector newton_poly(vector *points) {
-  vector result;
-  vector_init(&result, points->size, sizeof(double));
-  vector_push(&result, &unwrap_pair(vector_get(points, 0)).b);
-
-  //for (size_t i = 0; i < points->size; ++i) {
-      
-  //}
-  vector_print(&result); 
-  return result;
 }
