@@ -1,95 +1,52 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
-#include "../../task_3/src/lup/lup.h"
-#include "../../task_3/src/matrix/matrix.h"
-#include "../../task_3/src/vector/vector.h"
+#include "types/vector.h"
+#include "types/matrix.h"
+#include "methods/rng.h"
+#include "common.h"
 
-double vector_norm(vector *v) {
-    double result = 0.0;
-    for (size_t i = 0; i < v->size; ++i) {
-        if (result < fabs(*(double *)vector_get(v, i))) {
-            result = fabs(*(double *)vector_get(v, i));
-        }
-    }
-    return result;
-}
-
-void matrix_on_vector(matrix *a, vector *v) {
-    vector result;
-    vector_init_copy(&result, v);
-    for (size_t i = 0; i < a->rows; ++i) {
-        double sum = 0.0;
-        for (size_t j = 0; j < a->rows; ++j) {
-            sum += *(double *)matrix_get(a, i, j) * *(double *)vector_get(v, j);
-        }
-        *(double *)vector_get(&result, i) = sum;
-    }
-    vector_assign(v, &result);
-    vector_free(&result);
-}
-
-void vector_normalize(matrix *a, vector *v) {
-    matrix_on_vector(a, v);
-    double norm_inf = vector_norm(v);
-    for (size_t i = 0; i < v->size; ++i) {
-        *(double *)vector_get(v, i) = 
-            *(double *)vector_get(v, i) / norm_inf;
-    }
-}
-
-void matrix_init_(matrix *a, vector *v) {
-    for (size_t i = 0; i < a->rows; ++i) {
-        *(double *)matrix_get(a, i, i) = 
-            *(double *)matrix_get(a, i, i) - *(double *)vector_get(v, i);
-    }
-}
+#define BOUND_A 1.0
+#define BOUND_B 10.0
 
 int main(void) {
-    matrix a;
-    vector x_0, x;
-    double tmp, epsilon;
-    size_t n;
+  size_t n;
+  scanf("%zu", &n);
 
-    printf("matrix size?\n");
-    scanf("%zu", &n);
+  srand(time(NULL));
+  
+  matrix lambda, c;
+  matrix_init(&lambda, n, sizeof(double));
+  matrix_init(&c, n, sizeof(double));
+  matrix_fill_zero(&lambda);
+  matrix_fill_zero(&c);
 
-    matrix_init(&a, n, sizeof(double));
-    vector_init(&x_0, n, sizeof(double));
-    vector_init(&x, n, sizeof(double));
-    
-    for (size_t i = 0; i < n; ++i) {
-        tmp = 1.0;
-        vector_push(&x, &tmp);
+  for (size_t i = 0; i < lambda.rows; ++i) {
+    unwrap_double(matrix_get(&lambda, i, i)) = rng(BOUND_A, BOUND_B);
+  }
+
+  for (size_t i = 0; i < c.rows; ++i) {
+    for (size_t j = 0; j < c.rows; ++j) {
+      unwrap_double(matrix_get(&c, i, j)) = rng(BOUND_A, BOUND_B);
     }
+  }
 
-    printf("matrix?\n");
-    for (size_t i = 0; i < n; ++i) {
-        for (size_t j = 0; j < n; ++j) {
-            scanf("%lf", &tmp);
-            matrix_push(&a, (void *)&tmp);
-        }
-    }
+  matrix_print(&lambda);
+  matrix_print(&c);
 
-    printf("eigen values?\n");
-    for (size_t i = 0; i < n; ++i) {
-        scanf("%lf", &tmp);
-        vector_push(&x_0, &tmp);
-    }
+  matrix *inv = matrix_inverse(&c);
+  matrix *res = matrix_on_matrix(inv, &lambda);
+  matrix *fin = matrix_on_matrix(res, &c);
 
-    printf("epsilon?\n");
-    scanf("%lf", &epsilon);
+  matrix_print(fin);
 
-    matrix_init_(&a, &x_0);
-   
-    do {
-        vector_normalize(&a, &x_0);
-        lup(&a, &x_0, &x);
-        //vector_normalize(&a, &x_0);
-        vector_assign(&x_0, &x);
-    } while (vector_diff(&x, &x_0) > epsilon); 
-
-    vector_print(&x);
-
-    return 0;
+  matrix_free(res);
+  matrix_free(inv);
+  matrix_free(fin);
+  matrix_free(&lambda);
+  matrix_free(&c);
+  
+  return 0;
 }

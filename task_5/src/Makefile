@@ -3,7 +3,7 @@ CFLAGS := -Wall -Wextra -O3 -std=gnu2x ${CFLAGS}
 CC = clang
 LD = clang
 
-SRCS_DIRS = . methods types func draw
+SRCS_DIRS = . methods types funcs draw
 SRCS = $(wildcard $(addsuffix /*.c, $(SRCS_DIRS)))
 
 LL = -lm -ljemalloc -lcurl
