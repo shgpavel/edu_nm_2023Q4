@@ -17,7 +17,7 @@
 int main(void) {
  
   /* evenly distributed nodes */
-  for (size_t s = 60; s <= 61; ++s) {
+  for (size_t s = 10; s <= 15; ++s) {
     vector points;
     vector_init(&points, s, sizeof(pair));
     for (size_t i = 0; i < s; ++i) {
@@ -25,10 +25,8 @@ int main(void) {
       pair point_p = {point, func(point)};
       vector_push(&points, (void *)&point_p);
     }
-    vector_print(&points);
 
     vector *res = lagrange_poly(&points);
-    vector_print(res);
     vector_free(&points);
     
     add_func(res);

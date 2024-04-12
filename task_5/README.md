@@ -1,3 +1,7 @@
+Status:
+=======
+    Only parts working/Actively developing
+
 Contains:
 =========
     src/types/vector.c          -- vector with jemalloc (if ! use libc instead)

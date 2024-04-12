@@ -1,3 +1,10 @@
+Status:
+=======
+    Working and closed
+    It means I leave it in current stage and
+    improvements from further tasks will not be
+    commited here
+
 Contains:
 ===========
     src/main.cpp                 -- Class Vector, Matrix impl + tests

@@ -1,6 +1,16 @@
+Overview:
+=========
+    It was my enthusiastic task but now
+    I received suitable objective for this
+    method described in tz_4.pdf
+
+    Also I need to mention that this task I'm
+    doing after the task_5 so it probably would
+    not be done before task_5
+
 Status:
 =======
-    not debugged not working yet huh
+    Not debugged not working yet huh
 
 Contains:
 =========

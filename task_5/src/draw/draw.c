@@ -6,24 +6,7 @@
 #include "../common.h"
 #include "../types/vector.h"
 
-#define str_limit 3000
-
-char *go_str(vector *target) {
-  char *equation = malloc(str_limit);
-  char *ptr = equation;
-
-  for (size_t i = 0; i < target->size; ++i) {
-    sprintf(ptr, "%lgx^%zu", 
-                    unwrap_double(vector_get(target, i)), i);
-    ptr += strlen(ptr);
-    if ((i < target->size - 1) &&
-        unwrap_double(vector_get(target, i + 1)) > 0) {
-      sprintf(ptr, "%s", "+");
-      ptr += strlen(ptr);
-    }
-  }
-  return equation; 
-}
+#define str_limit 9000
 
 struct memory_struct {
   size_t size;
@@ -48,12 +31,51 @@ static size_t write_callback(void *contents, size_t size, size_t nmemb, void *us
   return realsize;
 }
 
+void format_exp(char *buf, double value) {
+  sprintf(buf, "%.6e", value);
+  char *e_pos = strchr(buf, 'e');
+
+  short exponent = 0;
+  sscanf(e_pos + 1, "%hd", &exponent);
+
+  size_t shift_length = strlen(e_pos);
+  memmove(e_pos + 5 + (exponent < 0 ? 2 : 1), e_pos + 1, shift_length);
+  memcpy(e_pos, "*10^{", 5);
+  e_pos += 5;
+  sprintf(e_pos, "%hd}", exponent);
+}
+
+char *go_str(vector *target) {
+  char *equation = malloc(str_limit);
+  char *ptr = equation;
+
+  char buffer[50];
+  for (size_t i = 0; i < target->size; ++i) {
+    if (unwrap_double(vector_get(target, i)) > 1e+6 ||
+        unwrap_double(vector_get(target, i)) < 1e-4) {
+      format_exp(buffer, unwrap_double(vector_get(target, i)));
+      sprintf(ptr, "%sx^{%zu}", buffer, i);
+      memset(buffer, '\0', 50);
+    } else {
+      sprintf(ptr, "%lgx^%zu", 
+        unwrap_double(vector_get(target, i)), i);
+    }
+    ptr += strlen(ptr);
+    if ((i < target->size - 1) &&
+        unwrap_double(vector_get(target, i + 1)) > 0) {
+      sprintf(ptr, "%s", "+");
+      ++ptr;
+    }
+  }
+  return equation; 
+}
+
 void add_func(vector *target) {
   char *p = go_str(target);
   
   CURL *curl;
   CURLcode res;
-  char postfields[1024];
+  char postfields[str_limit];
 
   sprintf(postfields, "{\"latex\": \"%s\"}", p);
 
