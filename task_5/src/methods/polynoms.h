@@ -3,7 +3,7 @@
 
 #include "../types/vector.h"
 
-vector poly_mult(vector *, vector *);
-void   poly_sum(vector *, vector *);
+vector* poly_mult(vector *, vector *);
+void    poly_sum(vector *, vector *);
 
 #endif

@@ -71,18 +71,18 @@ void matrix_free(matrix *m) {
 	m->type_size = 0;
 }
 
-void matrix_on_vector(matrix *a, vector *v) {
+vector matrix_on_vector(matrix *a, vector *v) {
   vector result;
   vector_init_copy(&result, v);
   for (size_t i = 0; i < a->rows; ++i) {
     double sum = 0.0;
     for (size_t j = 0; j < a->rows; ++j) {
-      sum += unwrap_double(matrix_get(a, i, j)) * unwrap_double(vector_get(v, j));
+      sum += 
+        unwrap_double(matrix_get(a, i, j)) * unwrap_double(vector_get(v, j));
     }
     unwrap_double(vector_get(&result, i)) = sum;
   }
-  vector_assign(v, &result);
-  vector_free(&result);
+  return result;
 }
 
 void matrix_dm(matrix *a, vector *v) {

@@ -16,7 +16,7 @@ void  matrix_print(matrix *);
 void  matrix_swap(matrix *, size_t, size_t, size_t, size_t);
 void* matrix_get(matrix *, size_t, size_t);
 void  matrix_free(matrix *);
-void  matrix_on_vector(matrix *, vector *);
+vector  matrix_on_vector(matrix *, vector *);
 void  matrix_normalize_vect(matrix *, vector *);
 matrix* matrix_on_matrix(matrix *a, matrix *b);
 matrix* matrix_inverse(matrix *m);

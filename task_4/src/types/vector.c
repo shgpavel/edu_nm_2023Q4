@@ -24,10 +24,10 @@ void vector_init_copy(vector *dest, vector *src) {
   }
 }
 
-void vector_fill_zero(vector *v) {
+void vector_fill_smth(vector *v, double x) {
   if (v->type_size == sizeof(double)) {
 	  for (size_t i = 0; i < v->capacity; ++i) {
-	    double tmp = 0.0;
+	    double tmp = x;
 	    vector_push(v, (void *)&tmp);
 	  }
   }
@@ -143,9 +143,16 @@ void vector_free(vector *v) {
 double vector_norm(vector *v) {
   double result = 0.0;
   for (size_t i = 0; i < v->size; ++i) {
-    if (result < fabs(unwrap_double(vector_get(v, i)))) {
-      result = fabs(unwrap_double(vector_get(v, i)));
-    }
+    result += unwrap_double(vector_get(v, i)) *
+                  unwrap_double(vector_get(v, i));
   }
-  return result;
+  return sqrt(result);
+}
+
+void vector_normalize(vector *v) {
+  double norm = vector_norm(v);
+  for (size_t i = 0; i < v->size; ++i) {
+    unwrap_double(vector_get(v, i)) = 
+      unwrap_double(vector_get(v, i)) / norm;
+  }
 }

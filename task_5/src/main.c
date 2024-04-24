@@ -16,7 +16,8 @@ int main(void) {
 
   pair segm = {1.0, 2.542};
 
-  /* evenly distributed nodes */ 
+  /*
+   evenly distributed nodes  
   for (size_t s = 10; s <= 15; ++s) {
     vector points;
     vector_init(&points, s, sizeof(pair));
@@ -33,9 +34,9 @@ int main(void) {
     add_func(res);
     vector_free(res);
   }
-
+  */
   /* optimal nodes */
-  for (size_t s = 40; s <= 50; ++s) {
+  for (size_t s = 10; s <= 20; ++s) {
     vector points;
     vector_init(&points, s, sizeof(pair));
     for (size_t i = 0; i < s; ++i) {
@@ -49,6 +50,8 @@ int main(void) {
     add_func(res);
     vector_free(res);
   }
+  
+  str_func("cot (x) - x");
 
   plot();
   return 0;

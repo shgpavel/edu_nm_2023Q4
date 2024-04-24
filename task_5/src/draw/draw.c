@@ -70,9 +70,7 @@ char *go_str(vector *target) {
   return equation; 
 }
 
-void add_func(vector *target) {
-  char *p = go_str(target);
-  
+void str_func(char *p) {
   CURL *curl;
   CURLcode res;
   char postfields[str_limit];
@@ -98,6 +96,11 @@ void add_func(vector *target) {
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
   }
+}
+
+void add_func(vector *target) {
+  char *p = go_str(target);
+  str_func(p);
   free(p);
 }
 
