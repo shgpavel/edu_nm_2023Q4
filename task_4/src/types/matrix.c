@@ -71,16 +71,17 @@ void matrix_free(matrix *m) {
 	m->type_size = 0;
 }
 
-vector matrix_on_vector(matrix *a, vector *v) {
-  vector result;
-  vector_init_copy(&result, v);
+vector* matrix_on_vector(matrix *a, vector *v) {
+  vector *result = (vector *)malloc(sizeof(vector));
+  //vector_init(result, v->size, v->type_size);
+  vector_init_copy(result, v);
+
   for (size_t i = 0; i < a->rows; ++i) {
     double sum = 0.0;
     for (size_t j = 0; j < a->rows; ++j) {
-      sum += 
-        unwrap_double(matrix_get(a, i, j)) * unwrap_double(vector_get(v, j));
+      sum = sum + unwrap_double(matrix_get(a, i, j)) * unwrap_double(vector_get(v, j));
     }
-    unwrap_double(vector_get(&result, i)) = sum;
+    vector_change(result, i, (void *)&sum);
   }
   return result;
 }

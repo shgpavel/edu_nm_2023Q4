@@ -140,6 +140,10 @@ void vector_free(vector *v) {
   free(v->data);
 }
 
+void vector_free_ptrs(vector *v) {
+  free(v->data);
+}
+
 double vector_norm(vector *v) {
   double result = 0.0;
   for (size_t i = 0; i < v->size; ++i) {

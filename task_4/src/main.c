@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
 #include "types/vector.h"
 #include "types/matrix.h"
+#include "types/eigenpair.h"
 #include "methods/rng.h"
+#include "methods/power_method.h"
 #include "common.h"
 
 #define BOUND_A 1.0
@@ -17,7 +18,7 @@ int main(void) {
 
   srand(time(NULL));
   
-  matrix lambda, c;
+  matrix lambda, c, c_copy;
   matrix_init(&lambda, n, sizeof(double));
   matrix_init(&c, n, sizeof(double));
   matrix_fill_zero(&lambda);
@@ -33,20 +34,37 @@ int main(void) {
     }
   }
 
+  matrix_init_copy(&c_copy, &c);
+
   matrix_print(&lambda);
   matrix_print(&c);
-
+  
   matrix *inv = matrix_inverse(&c);
+  matrix_print(inv);
+  matrix_free(&c);
+
   matrix *res = matrix_on_matrix(inv, &lambda);
-  matrix *fin = matrix_on_matrix(res, &c);
+  matrix_free(inv);
+  matrix_free(&lambda);
+  free(inv);
+
+  matrix *fin = matrix_on_matrix(res, &c_copy);
+  matrix_free(res);
+  matrix_free(&c_copy);
+  free(res);
 
   matrix_print(fin);
-
-  matrix_free(res);
-  matrix_free(inv);
-  matrix_free(fin);
-  matrix_free(&lambda);
-  matrix_free(&c);
   
+  eigenpair *pm_res = power_method(fin);
+  vector_print(&pm_res->eigenvector);
+  printf("%lg\n", pm_res->eigenvalue);
+
+
+  matrix_free(fin);
+  free(fin);
+
+  vector_free(&pm_res->eigenvector);
+  free(pm_res);
+
   return 0;
 }

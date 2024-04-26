@@ -11,7 +11,7 @@ typedef struct vector_s {
 void   vector_init(vector *, size_t, size_t);
 void   vector_init_copy(vector *, vector *);
 void   vector_push(vector *, void *);
-void   vector_fill_smth(vector *);
+void   vector_fill_smth(vector *, double);
 void   vector_swap(vector *, size_t, size_t);
 void   vector_change(vector *, size_t, void *);
 void   vector_mult(vector *v, double a);
@@ -21,6 +21,8 @@ void   vector_delete(vector *, size_t);
 void*  vector_get(vector *, size_t);
 void   vector_print(vector *);
 void   vector_free(vector *);
-double vector_normalize(vector *);
+void   vector_free_ptrs(vector *);
+void   vector_normalize(vector *);
+double vector_norm(vector *);
 
 #endif
