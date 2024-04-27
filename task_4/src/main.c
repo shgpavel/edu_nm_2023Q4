@@ -7,6 +7,7 @@
 #include "types/eigenpair.h"
 #include "methods/rng.h"
 #include "methods/power_method.h"
+#include "methods/solv.h"
 #include "common.h"
 
 #define BOUND_A 1.0

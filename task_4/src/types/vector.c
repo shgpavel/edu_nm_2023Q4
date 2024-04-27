@@ -73,7 +73,7 @@ void vector_mult(vector *v, double a) {
 }
 
 double vector_diff(vector *x, vector *y) {
-  if (x->size == y->size && 
+  if (x->size == y->size &&
       (y->type_size == sizeof(double)) &&
       (x->type_size == sizeof(double))
       ) {
@@ -82,7 +82,7 @@ double vector_diff(vector *x, vector *y) {
 	    result += (unwrap_double(x->data[i]) - unwrap_double(y->data[i])) *
 			          (unwrap_double(x->data[i]) - unwrap_double(y->data[i]));
 	  }
-	  return sqrt(result);	
+	  return sqrt(result);
   }
   return 0.0;
 }
@@ -96,7 +96,7 @@ void vector_assign(vector *v, vector *c) {
   for (size_t i = 0; i < v->size; ++i) {
 	  vector_change(v, i, vector_get(c, i));
 	}
-  
+
   if (v->size < c->size) {
     for (size_t i = v->size; i < c->size; ++i) {
       vector_push(v, vector_get(c, i));
@@ -134,14 +134,34 @@ void vector_free(vector *v) {
   for (size_t i = 0; i < v->size; ++i) {
 	  free(v->data[i]);
   }
-  
+
   v->size = 0;
   v->capacity = 0;
   free(v->data);
 }
 
-void vector_free_ptrs(vector *v) {
-  free(v->data);
+void vector_copy_from_heap(vector *v, vector *c) {
+  *v = *c;
+  c->data = NULL;
+  free(c);
+}
+
+
+void swap_xor_st(size_t *a, size_t *b) {
+  *a ^= *b;
+  *b ^= *a;
+  *a ^= *b;
+}
+
+
+void vector_swap_jew(vector *v, vector *c) {
+  swap_xor_st(&v->size, &c->size);
+  swap_xor_st(&v->capacity, &c->capacity);
+  swap_xor_st(&v->type_size, &c->type_size);
+
+  void **tmp = v->data;
+  v->data = c->data;
+  c->data = tmp;
 }
 
 double vector_norm(vector *v) {
@@ -156,7 +176,7 @@ double vector_norm(vector *v) {
 void vector_normalize(vector *v) {
   double norm = vector_norm(v);
   for (size_t i = 0; i < v->size; ++i) {
-    unwrap_double(vector_get(v, i)) = 
+    unwrap_double(vector_get(v, i)) =
       unwrap_double(vector_get(v, i)) / norm;
   }
 }

@@ -21,7 +21,8 @@ void   vector_delete(vector *, size_t);
 void*  vector_get(vector *, size_t);
 void   vector_print(vector *);
 void   vector_free(vector *);
-void   vector_free_ptrs(vector *);
+void   vector_copy_from_heap(vector *, vector *);
+void   vector_swap_jew(vector *, vector *);
 void   vector_normalize(vector *);
 double vector_norm(vector *);
 

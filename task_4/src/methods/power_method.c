@@ -25,9 +25,8 @@ eigenpair* power_method(matrix *a) {
 
   for (;;) {
     vector *tmp_v = matrix_on_vector(a, &cur_vec);
-    vector_assign(&result->eigenvector, tmp_v);
-    vector_free(tmp_v);
-    free(tmp_v);
+    vector_free(&result->eigenvector);
+    vector_copy_from_heap(&result->eigenvector, tmp_v);
 
 		for (size_t i = 0; i < a->rows; ++i) {
 			double tmp = (unwrap_double(vector_get(&result->eigenvector, i)) /
@@ -39,13 +38,13 @@ eigenpair* power_method(matrix *a) {
 		size_t flag = 1;
 		for (size_t i = 0; i < a->rows; ++i) {
 			if (fabs(unwrap_double(vector_get(&eigen_next, i)) -
-            unwrap_double(vector_get(&eigen_prev, i))) > rtol) flag = 0;
+               unwrap_double(vector_get(&eigen_prev, i))) > rtol) flag = 0;
 		}
 
 		if (flag == 1) break;
 
-    vector_assign(&eigen_prev, &eigen_next);
-		vector_assign(&cur_vec, &result->eigenvector);
+    vector_swap_jew(&eigen_prev, &eigen_next);
+    vector_swap_jew(&cur_vec, &result->eigenvector);
     vector_normalize(&cur_vec);
 	}
 
