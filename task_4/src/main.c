@@ -7,11 +7,8 @@
 #include "types/eigenpair.h"
 #include "methods/rng.h"
 #include "methods/power_method.h"
-#include "methods/solv.h"
+#include "methods/inverse_iteration.h"
 #include "common.h"
-
-#define BOUND_A 1.0
-#define BOUND_B 10.0
 
 int main(void) {
   size_t n;
@@ -38,10 +35,8 @@ int main(void) {
   matrix_init_copy(&c_copy, &c);
 
   matrix_print(&lambda);
-  matrix_print(&c);
   
   matrix *inv = matrix_inverse(&c);
-  matrix_print(inv);
   matrix_free(&c);
 
   matrix *res = matrix_on_matrix(inv, &lambda);
@@ -58,14 +53,23 @@ int main(void) {
   
   eigenpair *pm_res = power_method(fin);
   vector_print(&pm_res->eigenvector);
-  printf("%lg\n", pm_res->eigenvalue);
+  printf("%lg\n\n", pm_res->eigenvalue);
 
-
-  matrix_free(fin);
-  free(fin);
-
+  vector *it_res = inverse_iter(fin);
+  for (size_t i = 0; i < it_res->size; ++i) {
+    vector_print(&((eigenpair *)vector_get(it_res, i))->eigenvector);
+    vector_free(&((eigenpair *)vector_get(it_res, i))->eigenvector);
+    printf("%lg\n\n", ((eigenpair *)vector_get(it_res, i))->eigenvalue);
+  }
+  
+  //vector_free(it_res);
+  //free(it_res);
+  
   vector_free(&pm_res->eigenvector);
   free(pm_res);
-
+  
+  matrix_free(fin);
+  free(fin);
+    
   return 0;
 }

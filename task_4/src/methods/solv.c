@@ -15,15 +15,14 @@ void finalize(matrix *a, vector *b, vector *solution) {
     vector_val(solution, i) = vector_val(b, i);
     for (size_t j = a->rows; j > i + 1; ) {
       --j;
-      vector_val(solution, i) = vector_val(solution, i) -
-        matrix_val(a, i, j) * vector_val(solution, j);
+      vector_val(solution, i) -= matrix_val(a, i, j) * vector_val(solution, j);
     }
-    vector_val(solution, i) = vector_val(solution, i) / matrix_val(a, i, i);
+    vector_val(solution, i) /= matrix_val(a, i, i);
   }
 }
 
 
-vector* qr(matrix *a, vector *b) {}
+//vector* qr(matrix *a, vector *b) {}
 
 vector *gauss(matrix *m, vector *c) {
 
@@ -52,9 +51,9 @@ vector *gauss(matrix *m, vector *c) {
     for (size_t k = i + 1; k < a.rows; ++k) {
       double fcr = matrix_val(&a, k, i) / matrix_val(&a, i, i);
       for (size_t j = i; j < a.rows; ++j) {
-        matrix_val(&a, k, j) = matrix_val(&a, k, j) - fcr * matrix_val(&a, i, j);
+        matrix_val(&a, k, j) -= fcr * matrix_val(&a, i, j);
       }
-      vector_val(&b, k) = vector_val(&b, k) - fcr * vector_val(&b, i);
+      vector_val(&b, k) -= fcr * vector_val(&b, i);
     }
   }
 

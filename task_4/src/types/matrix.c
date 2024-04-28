@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 #include <jemalloc/jemalloc.h>
 
 #include "vector.h"
@@ -73,7 +74,6 @@ void matrix_free(matrix *m) {
 
 vector* matrix_on_vector(matrix *a, vector *v) {
   vector *result = (vector *)malloc(sizeof(vector));
-  //vector_init(result, v->size, v->type_size);
   vector_init_copy(result, v);
 
   for (size_t i = 0; i < a->rows; ++i) {
@@ -86,16 +86,9 @@ vector* matrix_on_vector(matrix *a, vector *v) {
   return result;
 }
 
-void matrix_dm(matrix *a, vector *v) {
-  for (size_t i = 0; i < a->rows; ++i) {
-    unwrap_double(matrix_get(a, i, i)) = 
-      unwrap_double(matrix_get(a, i, i)) - unwrap_double(vector_get(v, i));
-  }
-}
-
 void matrix_normalize_vect(matrix *a, vector *v) {
   matrix_on_vector(a, v);
-  double norm_inf = vector_norm(v);
+  double norm_inf = sqrt(vector_sclr_prod(v, v));
   for (size_t i = 0; i < v->size; ++i) {
     unwrap_double(vector_get(v, i)) = 
       unwrap_double(vector_get(v, i)) / norm_inf;
@@ -180,4 +173,16 @@ matrix* matrix_inverse(matrix *m) {
   }
   
   return inv;
+}
+
+double matrix_norm_inf(matrix *a) {
+  double norm_inf = 0.0;
+  for (size_t i = 0; i < a->rows; ++i) {
+    double row_sum = 0.0;
+    for (size_t j = 0; j < a->rows; ++j) {
+      row_sum += fabs(unwrap_double(matrix_get(a, i, j)));
+    }
+    norm_inf = row_sum > norm_inf ? row_sum : norm_inf;
+  }
+  return norm_inf;
 }

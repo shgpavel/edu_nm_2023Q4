@@ -43,8 +43,8 @@ eigenpair* power_method(matrix *a) {
 
 		if (flag == 1) break;
 
-    vector_swap_jew(&eigen_prev, &eigen_next);
-    vector_swap_jew(&cur_vec, &result->eigenvector);
+    vector_swap_eff(&eigen_prev, &eigen_next);
+    vector_swap_eff(&cur_vec, &result->eigenvector);
     vector_normalize(&cur_vec);
 	}
 
@@ -52,12 +52,11 @@ eigenpair* power_method(matrix *a) {
 	for (size_t i = 0; i < a->rows; ++i) {
 		result->eigenvalue += unwrap_double(vector_get(&eigen_next, i));
 	}
-
+  result->eigenvalue = result->eigenvalue / (double) a->rows;	
+  
   vector_free(&cur_vec);
   vector_free(&eigen_next);
   vector_free(&eigen_prev);
 
-
-	result->eigenvalue = result->eigenvalue / (double) a->rows;	
   return result;
 }

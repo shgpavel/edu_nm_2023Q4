@@ -146,15 +146,13 @@ void vector_copy_from_heap(vector *v, vector *c) {
   free(c);
 }
 
-
 void swap_xor_st(size_t *a, size_t *b) {
   *a ^= *b;
   *b ^= *a;
   *a ^= *b;
 }
 
-
-void vector_swap_jew(vector *v, vector *c) {
+void vector_swap_eff(vector *v, vector *c) {
   swap_xor_st(&v->size, &c->size);
   swap_xor_st(&v->capacity, &c->capacity);
   swap_xor_st(&v->type_size, &c->type_size);
@@ -164,17 +162,17 @@ void vector_swap_jew(vector *v, vector *c) {
   c->data = tmp;
 }
 
-double vector_norm(vector *v) {
+double vector_sclr_prod(vector *v, vector *c) {
   double result = 0.0;
   for (size_t i = 0; i < v->size; ++i) {
     result += unwrap_double(vector_get(v, i)) *
-                  unwrap_double(vector_get(v, i));
+                  unwrap_double(vector_get(c, i));
   }
-  return sqrt(result);
+  return result;
 }
 
 void vector_normalize(vector *v) {
-  double norm = vector_norm(v);
+  double norm = sqrt(vector_sclr_prod(v, v));
   for (size_t i = 0; i < v->size; ++i) {
     unwrap_double(vector_get(v, i)) =
       unwrap_double(vector_get(v, i)) / norm;
