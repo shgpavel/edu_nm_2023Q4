@@ -55,21 +55,22 @@ int main(void) {
   vector_print(&pm_res->eigenvector);
   printf("%lg\n\n", pm_res->eigenvalue);
 
+  vector_free(&pm_res->eigenvector);
+  free(pm_res);
+  
   vector *it_res = inverse_iter(fin);
-  for (size_t i = 0; i < it_res->size; ++i) {
+  for (size_t i = 0; it_res != NULL && i < it_res->size; ++i) {
     vector_print(&((eigenpair *)vector_get(it_res, i))->eigenvector);
     vector_free(&((eigenpair *)vector_get(it_res, i))->eigenvector);
     printf("%lg\n\n", ((eigenpair *)vector_get(it_res, i))->eigenvalue);
   }
-  
-  //vector_free(it_res);
-  //free(it_res);
-  
-  vector_free(&pm_res->eigenvector);
-  free(pm_res);
-  
+ 
+  if (it_res != NULL) {
+    vector_free(it_res);
+    free(it_res);
+  }
+
   matrix_free(fin);
   free(fin);
-    
   return 0;
 }

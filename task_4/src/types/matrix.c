@@ -186,3 +186,9 @@ double matrix_norm_inf(matrix *a) {
   }
   return norm_inf;
 }
+
+void matrix_copy_from_heap(matrix *v, matrix *c) {
+  *v = *c;
+  c->data = NULL;
+  free(c);
+}

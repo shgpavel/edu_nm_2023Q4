@@ -16,8 +16,9 @@
 #define epsilon_c 1e-8
 #define delta_c 1e-8
 
-#define BOUND_A 1.0
+#define BOUND_A -10.0
 #define BOUND_B 10.0
+#define INITIAL rng(BOUND_B, BOUND_A)
 
 
 #endif

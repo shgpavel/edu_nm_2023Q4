@@ -21,5 +21,6 @@ void     matrix_normalize_vect(matrix *, vector *);
 matrix*  matrix_on_matrix(matrix *, matrix *);
 matrix*  matrix_inverse(matrix *);
 double   matrix_norm_inf(matrix *);
+void     matrix_copy_from_heap(matrix *, matrix *);
 
 #endif

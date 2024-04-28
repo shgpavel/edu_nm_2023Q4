@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Wextra -O1 -std=gnu18 ${CFLAGS}
+CFLAGS := -Wall -Wextra -O3 -std=gnu2x ${CFLAGS}
 
 CC = gcc
 LD = gcc
@@ -6,10 +6,10 @@ LD = gcc
 SRCS_DIRS = . methods types
 SRCS = $(wildcard $(addsuffix /*.c, $(SRCS_DIRS)))
 
-LL = -lm -ljemalloc
+LL = -lm -ljemalloc -lpthread
 
 main: $(SRCS)
-	$(CC) $(SRCS) -pthread -o $(@) $(LL) $(CFLAGS)
+	$(CC) $(SRCS) -o $(@) $(LL) $(CFLAGS)
 
 clean:
 	rm -rf main
