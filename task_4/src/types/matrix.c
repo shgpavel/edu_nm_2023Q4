@@ -187,8 +187,10 @@ double matrix_norm_inf(matrix *a) {
   return norm_inf;
 }
 
-void matrix_copy_from_heap(matrix *v, matrix *c) {
-  *v = *c;
-  c->data = NULL;
+void matrix_copy_not_emp(matrix *v, matrix *c) {
+  swap_xor_st(&v->rows, &c->rows);
+  swap_xor_st(&v->type_size, &c->type_size);
+  vector_swap_eff(v->data, c->data);
+  matrix_free(c);
   free(c);
 }

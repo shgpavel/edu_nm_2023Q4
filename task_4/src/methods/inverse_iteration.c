@@ -12,7 +12,7 @@
 #include "solv.h"
 #include "rng.h"
 
-#define MAX_ITER 10000
+#define MAX_ITER 1000
 #define MAX_TIME 1000000000
 
 /*
@@ -28,7 +28,6 @@ If someone somehow will figure the problem in this code
 please contact me at shgpavel@yandex.ru
 
 */
-
 
 inline matrix prep_matrix(matrix *a, double se) {
   matrix res;
@@ -49,30 +48,6 @@ inline void deflate(matrix *a, eigenpair *ep) {
   }
 }
 
-/*
-inline void deflate(matrix *a, eigenpair *ep) {
-  matrix b;
-  matrix_init(&b, a->rows, sizeof(double));
-  for (size_t i = 0; i < a->rows; ++i) {
-    for (size_t j = 0; j < a->rows; ++j) {
-      double tmp;
-      tmp = unwrap_double(vector_get(&ep->eigenvector, i)) * 
-      unwrap_double(vector_get(&ep->eigenvector, j));
-      if (i == j) tmp = -tmp + 1; 
-      matrix_push(&b, (void *)&tmp);
-    }
-  }
-  matrix *tmp = matrix_on_matrix(&b, a);
-  matrix *res = matrix_on_matrix(tmp, &b);
-  matrix_free(tmp);
-  free(tmp);
-  
-  matrix_copy_from_heap(a, res);
-
-  matrix_free(&b);
-}
-*/
-
 vector* inverse_iter_flex_sigm(matrix *m) {
   matrix a;
   matrix_init_copy(&a, m);
@@ -80,10 +55,9 @@ vector* inverse_iter_flex_sigm(matrix *m) {
   vector *all_pairs = (vector *)malloc(sizeof(vector));
   vector_init(all_pairs, a.rows, sizeof(eigenpair));
 
-  for (double sigma = -matrix_norm_inf(&a);
-       all_pairs->size < a.rows &&
-       sigma < (matrix_norm_inf(&a) + 1e-3);
-       sigma += 1e-5) {
+  for (double sigma = -matrix_norm_inf(&a) - 1e-2;
+       sigma < (matrix_norm_inf(&a) + 1e-2);
+       sigma += rtol * rtol) {
     eigenpair tmp_ep;
     vector next_vec, cur_vec;
 
@@ -126,10 +100,9 @@ vector* inverse_iter_flex_sigm(matrix *m) {
       vector_swap_eff(&cur_vec, &next_vec);
     }
 
-    vector_swap_eff(&tmp_ep.eigenvector, &next_vec);
-    tmp_ep.eigenvalue = sigma;
-
-    if (flag == 1) {
+    if (flag == 1 && sigma < BOUND_B && sigma > BOUND_A && fabs(sigma) > 1e-3) {
+      vector_swap_eff(&tmp_ep.eigenvector, &next_vec);
+      tmp_ep.eigenvalue = sigma;
       deflate(&a, &tmp_ep);
       vector_push(all_pairs, &tmp_ep);
     }
@@ -146,7 +119,7 @@ vector* inverse_iter_reley(matrix *m) {
   vector *all_pairs = (vector *)malloc(sizeof(vector));
   vector_init(all_pairs, a.rows, sizeof(eigenpair));
 
-  while (all_pairs->size < a.rows) {
+  for (size_t i = 0; i < MAX_ITER; ++i) {
     double sigma;
     eigenpair tmp_ep;
 
@@ -184,7 +157,7 @@ vector* inverse_iter_reley(matrix *m) {
       vector_swap_eff(&cur_vec, &next_vec);
     }
 
-    if (flag == 1) {
+    if (flag == 1 && sigma < BOUND_B && sigma > BOUND_A && fabs(sigma) > 1e-3) {
       vector_swap_eff(&tmp_ep.eigenvector, &next_vec);
       tmp_ep.eigenvalue = sigma;
 
@@ -210,11 +183,36 @@ void* thread_func_iir(void* arg) {
   return tmp;
 }
 
+
+vector* concat_res(vector *a, vector *b, matrix *c) {
+  vector *result = (vector *)malloc(sizeof(vector));
+  vector_init(result, c->rows, sizeof(eigenpair));
+
+  vector_swap_eff(result, a);
+  free(a);
+
+  for (size_t i = 0; i < b->size /* && i < c->rows */; ++i) {
+    size_t seen = 0;
+    for (size_t j = 0; j < result->size; ++j) {
+      if (((eigenpair *)vector_get(result, j))->eigenvalue ==
+          ((eigenpair *)vector_get(b, i))->eigenvalue) seen = 1; 
+    }
+    if (!seen) {
+      vector_push(result, vector_get(b, i));
+    }
+  }
+
+  vector_free(b);
+  free(b);
+  return result;
+}
+
 vector* inverse_iter(matrix *a) {
   pthread_t thread_one;
   pthread_t thread_two;
 
-  vector *out;
+  vector *out_rel;
+  vector *out_shf;
 
   if (pthread_create(&thread_one, NULL, thread_func_iir, a) != 0) {
     fprintf(stderr, "Error| Failed to create thread_one\n");
@@ -225,33 +223,41 @@ vector* inverse_iter(matrix *a) {
   clock_gettime(CLOCK_REALTIME, &ts);
   ts.tv_sec += 10;
 
-  int res = pthread_timedjoin_np(thread_one, (void**)&out, &ts);
+  int res = pthread_timedjoin_np(thread_one, (void**)&out_rel, &ts);
   
   if (res == ETIMEDOUT) {
-    printf("Log|  Switching from reley|hangs\n");
+    printf("[Log]  Switching from reley|hangs\n");
     pthread_cancel(thread_one);
+    out_rel = NULL;
   } else if (res == 0) {
-    printf("Log|  Result inv iter (reley)\n");
-    return out;
+    printf("[Log]  Result inv iter (reley)\n");
   }
 
   if (pthread_create(&thread_two, NULL, thread_func_iifs, a) != 0) {
-    fprintf(stderr, "Error| Failed to create thread_two\n");
+    fprintf(stderr, "[Error] Failed to create thread_two\n");
     return NULL;
   }
 
   clock_gettime(CLOCK_REALTIME, &ts);
   ts.tv_sec += 10;
 
-  res = pthread_timedjoin_np(thread_two, (void**)&out, &ts);
+  res = pthread_timedjoin_np(thread_two, (void**)&out_shf, &ts);
   if (res == ETIMEDOUT) {
-    printf("Log|  Switching from shifts|hangs\n");
+    printf("[Log]  Switching from shifts|hangs\n");
     pthread_cancel(thread_two);
+    out_shf = NULL;
   } else if (res == 0) {
-    printf("Log|  Result inv iter (shifts)\n");
-    return out;
+    printf("[Log]  Result inv iter (shifts)\n");
   }
 
-  fprintf(stderr, "Error| Nothing worked so inv iter interrupted\n");
-  return NULL;
+  if (out_rel == NULL && out_shf == NULL) {
+    fprintf(stderr, "[Error] Nothing worked so inv iter interrupted\n");
+    return NULL;
+  }
+  else if (out_rel == NULL) return out_shf;
+  else if (out_shf == NULL) return out_rel;
+  else {
+    vector *result = concat_res(out_rel, out_shf, a);
+    return result;
+  }
 }

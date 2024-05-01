@@ -3,5 +3,6 @@
 
 vector* qr(matrix *, vector *);
 vector* gauss(matrix *, vector *);
+void go_hessenberg(matrix *);
 
 #endif

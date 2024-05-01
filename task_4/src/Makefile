@@ -1,15 +1,33 @@
-CFLAGS := -Wall -Wextra -O3 -std=gnu2x ${CFLAGS}
+CFLAGS := -Wall -Wextra -O3 -std=gnu2x $(CFLAGS)
+LDFLAGS := -lm -ljemalloc -lpthread $(LDFLAGS)
 
 CC = gcc
 LD = gcc
 
+OUT_O_DIR = build
 SRCS_DIRS = . methods types
 SRCS = $(wildcard $(addsuffix /*.c, $(SRCS_DIRS)))
+OBJS := $(addprefix $(OUT_O_DIR)/,$(SRCS:.c=.o))
+DEPS = $(OBJS:.o=.d)
 
-LL = -lm -ljemalloc -lpthread
+all: $(OUT_O_DIR)/main
 
-main: $(SRCS)
-	$(CC) $(SRCS) -o $(@) $(LL) $(CFLAGS)
+$(OUT_O_DIR)/main: $(OBJS)
+	$(LD) $^ -o $@ $(LDFLAGS)
+
+$(OBJS): $(OUT_O_DIR)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(DEPS): $(OUT_O_DIR)/%.d: %.c
+	@mkdir -p $(@D)
+	$(CC) -E $(CFLAGS) $< -MM -MT $(@:.d=.o) > $@
 
 clean:
-	rm -rf main
+	rm -rf $(OBJS) $(DEPS) $(OUT_O_DIR)
+
+NODEPS = clean
+
+ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS))))
+include $(DEPS)
+endif

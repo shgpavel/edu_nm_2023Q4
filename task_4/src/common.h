@@ -18,7 +18,7 @@
 
 #define BOUND_A -10.0
 #define BOUND_B 10.0
-#define INITIAL rng(BOUND_B, BOUND_A)
 
+#define INITIAL rng(BOUND_B, BOUND_A)
 
 #endif

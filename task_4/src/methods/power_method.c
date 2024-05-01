@@ -60,6 +60,6 @@ eigenpair* power_method(matrix *a) {
   vector_free(&eigen_next);
   vector_free(&eigen_prev);
 
-  printf("Log|  Result power iter\n");
+  printf("[Log]  Result power iter\n");
   return result;
 }

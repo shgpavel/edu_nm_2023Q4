@@ -25,5 +25,6 @@ void   vector_copy_from_heap(vector *, vector *);
 void   vector_swap_eff(vector *, vector *);
 void   vector_normalize(vector *);
 double vector_sclr_prod(vector *, vector *);
+void   swap_xor_st(size_t *, size_t *);
 
 #endif

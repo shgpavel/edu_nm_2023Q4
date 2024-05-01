@@ -6,6 +6,7 @@
 #include "types/matrix.h"
 #include "types/eigenpair.h"
 #include "methods/rng.h"
+#include "methods/solv.h"
 #include "methods/power_method.h"
 #include "methods/inverse_iteration.h"
 #include "common.h"
@@ -52,12 +53,15 @@ int main(void) {
   matrix_print(fin);
   
   eigenpair *pm_res = power_method(fin);
-  vector_print(&pm_res->eigenvector);
-  printf("%lg\n\n", pm_res->eigenvalue);
+  if (pm_res != NULL) {
+    vector_print(&pm_res->eigenvector);
+    printf("%lg\n\n", pm_res->eigenvalue);
+    vector_free(&pm_res->eigenvector);
+    free(pm_res);
+   } else {
+    printf("[Error]  Power iter failed\n");
+   }
 
-  vector_free(&pm_res->eigenvector);
-  free(pm_res);
-  
   vector *it_res = inverse_iter(fin);
   for (size_t i = 0; it_res != NULL && i < it_res->size; ++i) {
     vector_print(&((eigenpair *)vector_get(it_res, i))->eigenvector);
@@ -70,6 +74,8 @@ int main(void) {
     free(it_res);
   }
 
+  go_hessenberg(fin);
+  
   matrix_free(fin);
   free(fin);
   return 0;
