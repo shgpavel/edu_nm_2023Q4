@@ -75,6 +75,17 @@ int main(void) {
   }
 
   go_hessenberg(fin);
+
+  vector *res_qr = qr(fin);
+  if (res_qr != NULL) {
+    printf("\n[LOG]  Result qr\n");
+    vector_print(res_qr);
+    printf("%zu\n", res_qr->size);
+    vector_free(res_qr);
+    free(res_qr);
+  } else {
+    printf("\n[Error]  Qr\n");
+  }
   
   matrix_free(fin);
   free(fin);
