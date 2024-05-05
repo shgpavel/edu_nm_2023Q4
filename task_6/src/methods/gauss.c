@@ -39,9 +39,7 @@ vector *gauss(matrix *m, vector *c) {
 
     if (lead != i) {
       vector_swap(&b, i, lead);
-      for (size_t k = 0; k < a.cols; ++k) {
-        matrix_swap(&a, i, k, lead, k);
-      }
+      matrix_row_swap(&a, i, lead);
     }
 
     for (size_t k = i + 1; k < a.rows; ++k) {

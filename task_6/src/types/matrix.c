@@ -24,13 +24,6 @@ void matrix_init_copy(matrix *dest, matrix *src) {
   }
 }
 
-void matrix_fill_zero(matrix *m) {
-  for (size_t i = 0; i < m->rows * m->cols; ++i) {
-    double tmp = 0.0;
-    matrix_push(m, (void *)&tmp);
-  }
-}
-
 void matrix_push(matrix *m, void *data) {
   vector_push(m->data, data);
 }
@@ -47,11 +40,37 @@ void matrix_swap(matrix *m, size_t i, size_t j, size_t k, size_t l) {
   }
 }
 
+void matrix_row_swap(matrix *m, size_t i, size_t j) {
+  if (i == j) return;
+  for (size_t col = 0; col < m->cols; ++col) {
+    matrix_swap(m, i, col, j, col);
+  }
+}
+
 void* matrix_get(matrix *m, size_t row, size_t col) {
   if ((row < m->rows) && (col < m->cols)) {
     return vector_get(m->data, row * m->cols + col);
   }
   return NULL;
+}
+
+void matrix_delete(matrix *m, size_t i, size_t j) {
+  vector_delete(m->data, i * m->cols + j);
+}
+
+void matrix_free(matrix *m) {
+	vector_free(m->data);
+	free(m->data);
+	m->rows = 0;
+  m->cols = 0;
+}
+
+void matrix_copy(matrix *v, matrix *c) {
+  swap_xor_st(&v->rows, &c->rows);
+  swap_xor_st(&v->cols, &c->cols);
+  vector_swap_eff(v->data, c->data);
+  if (c->data != NULL) matrix_free(c);
+  if (on_heap(c)) free(c);
 }
 
 void matrix_print(matrix *m) {
@@ -63,29 +82,63 @@ void matrix_print(matrix *m) {
   }
 }
 
-void matrix_free(matrix *m) {
-	vector_free(m->data);
-	free(m->data);
-	m->rows = 0;
-	m->data->type_size = 0;
+void matrix_fill_zero(matrix *m) {
+  for (size_t i = 0; i < m->rows * m->cols; ++i) {
+    double tmp = 0.0;
+    matrix_push(m, (void *)&tmp);
+  }
 }
 
-void matrix_free_elem(matrix *m, size_t i, size_t j) {
-  vector_delete(m->data, i * m->cols + j);
+double matrix_norm_inf(matrix *a) {
+  double norm_inf = 0.0;
+  for (size_t i = 0; i < a->rows; ++i) {
+    double row_sum = 0.0;
+    for (size_t j = 0; j < a->cols; ++j) {
+      row_sum += fabs(matrix_val(a, i, j));
+    }
+    norm_inf = row_sum > norm_inf ? row_sum : norm_inf;
+  }
+  return norm_inf;
+}
+
+matrix* matrix_transpose(matrix *a) {
+  matrix *res = (matrix *)malloc(sizeof(matrix));
+  matrix_init(res, a->cols, a->rows, a->data->type_size);
+  for (size_t i = 0; i < res->rows; ++i) {
+    for (size_t j = 0; j < res->cols; ++j) {
+      matrix_push(res, matrix_get(a, j, i));
+    }
+  }
+  return res;
 }
 
 vector* matrix_on_vector(matrix *a, vector *v) {
-  vector *result = (vector *)malloc(sizeof(vector));
-  vector_init_copy(result, v);
+  if (v->size != a->cols) return NULL;
+
+  vector *res = (vector *)malloc(sizeof(vector));
+  vector_init(res, a->rows, sizeof(double));
+  vector_fill_smth(res, 0.0);
 
   for (size_t i = 0; i < a->rows; ++i) {
     double sum = 0.0;
     for (size_t j = 0; j < a->cols; ++j) {
-      sum = sum + (matrix_val(a, i, j) * vector_val(v, j));
+      sum += (matrix_val(a, i, j) * vector_val(v, j));
     }
-    vector_change(result, i, (void *)&sum);
+    vector_val(res, i) = sum;
   }
-  return result;
+  return res;
+}
+
+void matrix_row_normalize(matrix *m, size_t row, double coef) {
+  for (size_t col = 0; col < m->cols; ++col) {
+    matrix_val(m, row, col) = matrix_val(m, row, col) / coef;
+  }
+}
+
+void matrix_row_subtract(matrix *m, size_t from, size_t what, double coef) {
+  for (size_t col = 0; col < m->rows; ++col) {
+    matrix_val(m, from, col) -= matrix_val(m, what, col) * coef;
+  }
 }
 
 void matrix_normalize_vect(matrix *a, vector *v) {
@@ -100,40 +153,19 @@ matrix* matrix_on_matrix(matrix *a, matrix *b) {
   if (a->data->type_size != b->data->type_size || a->cols != b->rows) {
     return NULL;
   }
-  matrix *result = (matrix *)malloc(sizeof(matrix));
-  matrix_init(result, a->rows, b->cols, a->data->type_size);
-  matrix_fill_zero(result);
+  matrix *res = (matrix *)malloc(sizeof(matrix));
+  matrix_init(res, a->rows, b->cols, a->data->type_size);
+  matrix_fill_zero(res);
   for (size_t i = 0; i < a->rows; ++i) {
-    for (size_t j = 0; j < a->cols; ++j) {
+    for (size_t j = 0; j < b->cols; ++j) {
       double sum = 0.0;
-      for (size_t k = 0; k < a->rows; ++k) {
+      for (size_t k = 0; k < a->cols; ++k) {
         sum += matrix_val(a, i, k) * matrix_val(b, k, j);
       }
-      matrix_val(result, i, j) = sum;
+      matrix_val(res, i, j) = sum;
     }
   }
-  return result;
-}
-
-void matrix_row_swap(matrix *m, size_t i, size_t j) {
-  if (i == j) return;
-  for (size_t col = 0; col < m->cols; ++col) {
-    void *temp = matrix_get(m, i, col);
-    matrix_change(m, i, col, matrix_get(m, j, col));
-    matrix_change(m, j, col, temp);
-  }
-}
-
-void matrix_row_normalize(matrix *m, size_t row, double coef) {
-  for (size_t col = 0; col < m->cols; ++col) {
-    matrix_val(m, row, col) = matrix_val(m, row, col) / coef;
-  }
-}
-
-void matrix_row_subtract(matrix *m, size_t from, size_t what, double coef) {
-  for (size_t col = 0; col < m->rows; ++col) {
-    matrix_val(m, from, col) -= matrix_val(m, what, col) * coef;
-  }
+  return res;
 }
 
 matrix* matrix_inverse(matrix *m) {
@@ -173,37 +205,4 @@ matrix* matrix_inverse(matrix *m) {
   }
   
   return inv;
-}
-
-double matrix_norm_inf(matrix *a) {
-  double norm_inf = 0.0;
-  for (size_t i = 0; i < a->rows; ++i) {
-    double row_sum = 0.0;
-    for (size_t j = 0; j < a->cols; ++j) {
-      row_sum += fabs(matrix_val(a, i, j));
-    }
-    norm_inf = row_sum > norm_inf ? row_sum : norm_inf;
-  }
-  return norm_inf;
-}
-
-void matrix_copy_not_emp(matrix *v, matrix *c) {
-  swap_xor_st(&v->rows, &c->rows);
-  swap_xor_st(&v->cols, &c->cols);
-  vector_swap_eff(v->data, c->data);
-  matrix_free(c);
-  if (on_heap(c)) {
-    free(c);
-  }
-}
-
-matrix* matrix_transpose(matrix *a) {
-  matrix *res = (matrix *)malloc(sizeof(matrix));
-  matrix_init(res, a->cols, a->rows, a->data->type_size);
-  for (size_t i = 0; i < a->rows; ++i) {
-    for (size_t j = 0; j < a->cols; ++j) {
-      matrix_push(res, matrix_get(a, j, i));
-    }
-  }
-  return res;
 }
