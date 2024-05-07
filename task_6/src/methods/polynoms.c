@@ -30,10 +30,11 @@ void fft(complex double *x, size_t n, size_t inverse) {
 }
 
 vector* poly_mult(vector *poly_1, vector *poly_2) {
-  vector *result = (vector *)malloc(sizeof(vector));
-  vector_init(result, poly_1->size, sizeof(double));
+  vector *res = (vector *)malloc(sizeof(vector));
 
   size_t result_deg = poly_1->size + poly_2->size - 1, n = 1;
+  vector_init(res, result_deg, sizeof(double));
+
   while (n < result_deg) {
     n *= 2;
   }
@@ -57,12 +58,12 @@ vector* poly_mult(vector *poly_1, vector *poly_2) {
   fft(fft_poly_1, n, 1);
   for (size_t i = 0; i < result_deg; ++i) {
     double tmp = (creal(fft_poly_1[i]) / n);
-    vector_push(result, &tmp);
+    vector_push(res, &tmp);
   }
 
   free(fft_poly_1);
   free(fft_poly_2);
-  return result;
+  return res;
 }
 
 void poly_sum(vector *v, vector *d) {
@@ -72,4 +73,12 @@ void poly_sum(vector *v, vector *d) {
       vector_val(v, i) += vector_val(d, i);
     }
   }
+}
+
+double poly_val(vector *v, double point) {
+  double res = 0.0;
+  for (size_t i = 0; i < v->size; ++i) {
+    res += vector_val(v, i) * pow(point, (double)i);
+  }
+  return res;
 }

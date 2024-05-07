@@ -24,6 +24,7 @@ void   vector_from_heap_to_stack(vector *, vector *);
 void   vector_swap_eff(vector *, vector *);
 void   vector_print(vector *);
 void   vector_fill_smth(vector *, double);
+void   vector_fill_vec(vector *);
 void   vector_mult(vector *v, double a);
 double vector_diff(vector *, vector *);
 double vector_sclr_prod(vector *, vector *);
