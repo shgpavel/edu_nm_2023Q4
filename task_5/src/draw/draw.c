@@ -51,18 +51,16 @@ char *go_str(vector *target) {
 
   char buffer[50];
   for (size_t i = 0; i < target->size; ++i) {
-    if (unwrap_double(vector_get(target, i)) > 1e+6 ||
-        unwrap_double(vector_get(target, i)) < 1e-4) {
-      format_exp(buffer, unwrap_double(vector_get(target, i)));
+    if (vector_val(target, i) > 1e+6 ||
+        vector_val(target, i) < 1e-4) {
+      format_exp(buffer, vector_val(target, i));
       sprintf(ptr, "%sx^{%zu}", buffer, i);
       memset(buffer, '\0', 50);
     } else {
-      sprintf(ptr, "%lgx^%zu", 
-        unwrap_double(vector_get(target, i)), i);
+      sprintf(ptr, "%lgx^{%zu}", vector_val(target, i), i);
     }
     ptr += strlen(ptr);
-    if ((i < target->size - 1) &&
-        unwrap_double(vector_get(target, i + 1)) > 0) {
+    if ((i < target->size - 1) && vector_val(target, i + 1) > 0) {
       sprintf(ptr, "%s", "+");
       ++ptr;
     }
@@ -122,7 +120,7 @@ void plot() {
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
       fprintf(stderr, "Error: curl_easy_perform() failed: %s\n",
-          curl_easy_strerror(res));
+              curl_easy_strerror(res));
     } else {
       const char *filename = "/tmp/plot.html";
       FILE *file = fopen(filename, "w");
@@ -137,11 +135,33 @@ void plot() {
         fprintf(stderr, "Failed to open file for writing\n");
       }
     }
-
     curl_easy_cleanup(curl);
     free(chunk.memory);
   }
-  
   curl_global_cleanup();
 }
 
+void clear_plot() {
+  CURL *curl;
+  CURLcode res;
+  char postfields[0];
+  
+  curl = curl_easy_init();
+  if (curl) {
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/clear-functions");
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields);
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    
+    res = curl_easy_perform(curl);
+
+    if (res != CURLE_OK) {
+      fprintf(stderr, "Error: curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+    }
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(headers);
+  }
+}

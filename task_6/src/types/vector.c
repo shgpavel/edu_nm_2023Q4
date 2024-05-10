@@ -51,16 +51,6 @@ void vector_push(vector *v, void *atad) {
   v->size++;
 }
 
-/*
-void vector_push_mv(vector *v, void *adat) {
-  if (v->size >= v->capacity) {
-	  vector_resize(v, v->capacity + v->capacity / 2);
-  }
-
-  
-}
-*/
-
 void vector_change(vector *v, size_t index, void *atad) {
   if (index < v->size) {
 	  memcpy(v->data[index], atad, v->type_size);

@@ -9,7 +9,7 @@
 #include "../types/vector.h"
 #include "../types/eigenpair.h"
 #include "../types/matrix.h"
-#include "solv.h"
+#include "gauss.h"
 #include "rng.h"
 
 #define MAX_ITER 1000
@@ -29,11 +29,53 @@ please contact me at shgpavel@yandex.ru
 
 */
 
+struct args {
+  int joined;
+  pthread_t td;
+  pthread_mutex_t mtx;
+  pthread_cond_t cond;
+  void **res;
+};
+
+static void *waiter(void *ap) {
+  struct args *args = ap;
+  pthread_join(args->td, args->res);
+  pthread_mutex_lock(&args->mtx);
+  args->joined = 1;
+  pthread_mutex_unlock(&args->mtx);
+  pthread_cond_signal(&args->cond);
+  return 0;
+}
+
+int pthread_timedjoin_np(pthread_t td, void **res, struct timespec *ts) {
+  pthread_t tmp;
+  int ret;
+  struct args args = { .td = td, .res = res };
+
+  pthread_mutex_init(&args.mtx, 0);
+  pthread_cond_init(&args.cond, 0);
+  pthread_mutex_lock(&args.mtx);
+
+  ret = pthread_create(&tmp, 0, waiter, &args);
+  if (!ret)
+    do ret = pthread_cond_timedwait(&args.cond, &args.mtx, ts);
+  while (!args.joined && ret != ETIMEDOUT);
+
+  pthread_mutex_unlock(&args.mtx);
+
+  pthread_cancel(tmp);
+  pthread_join(tmp, 0);
+
+  pthread_cond_destroy(&args.cond);
+  pthread_mutex_destroy(&args.mtx);
+  return args.joined ? 0 : ret;
+}
+
 inline matrix prep_matrix(matrix *a, double se) {
   matrix res;
   matrix_init_copy(&res, a);
   for (size_t i = 0; i < a->rows; ++i) {
-    unwrap_double(matrix_get(&res, i, i)) -= se;
+    matrix_val(&res, i, i) -= se;
   }
   return res;
 }
@@ -41,9 +83,9 @@ inline matrix prep_matrix(matrix *a, double se) {
 inline void deflate(matrix *a, eigenpair *ep) {
   for (size_t i = 0; i < a->rows; ++i) {
     for (size_t j = 0; j < a->rows; ++j) {
-      unwrap_double(matrix_get(a, i, j)) -= ep->eigenvalue *
-        unwrap_double(vector_get(&ep->eigenvector, i)) *
-        unwrap_double(vector_get(&ep->eigenvector, j));
+      matrix_val(a, i, j) -= ep->eigenvalue * 
+        vector_val(&ep->eigenvector, i) *
+        vector_val(&ep->eigenvector, j);
     }
   }
 }
@@ -74,14 +116,13 @@ vector* inverse_iter_flex_sigm(matrix *m) {
       vector *tmp_v = gauss(&tmp_m, &cur_vec);
       matrix_free(&tmp_m);
       vector_free(&next_vec);
-      vector_copy_from_heap(&next_vec, tmp_v);
+      vector_from_heap_to_stack(&next_vec, tmp_v);
 
       double tmp = 0;
       tmp_ep.eigenvalue = 0.0;
       for (size_t i = 0; i < a.rows; ++i) {
-        if (fabs(unwrap_double(vector_get(&next_vec, i))) < delta_c) continue;
-        tmp = (unwrap_double(vector_get(&cur_vec, i)) /
-                unwrap_double(vector_get(&next_vec, i)));
+        if (fabs(vector_val(&next_vec, i)) < delta_c) continue;
+        tmp = (vector_val(&cur_vec, i) / vector_val(&next_vec, i));
 		    tmp_ep.eigenvalue += tmp;
 	    }
       tmp_ep.eigenvalue /= ((double)a.rows);
@@ -92,8 +133,8 @@ vector* inverse_iter_flex_sigm(matrix *m) {
       flag = 1;
       for (size_t i = 0; i < a.rows; ++i) {
         if (fabs(tmp_ep.eigenvalue) > rtol) flag = 0;
-        if (fabs(unwrap_double(vector_get(&next_vec, i)) -
-               unwrap_double(vector_get(&cur_vec, i))) > rtol) flag = 0;
+        if (fabs(vector_val(&next_vec, i) -
+               vector_val(&cur_vec, i)) > rtol) flag = 0;
       }
       if (flag == 1) break;
 
@@ -145,13 +186,13 @@ vector* inverse_iter_reley(matrix *m) {
       tmp_v = gauss(&tmp_m, &cur_vec);
       vector_free(&next_vec);
       matrix_free(&tmp_m);
-      vector_copy_from_heap(&next_vec, tmp_v);
+      vector_from_heap_to_stack(&next_vec, tmp_v);
       vector_normalize(&next_vec);
 
       flag = 1;
       for (size_t i = 0; i < a.rows; ++i) {
-        if (fabs(unwrap_double(vector_get(&next_vec, i)) -
-                unwrap_double(vector_get(&cur_vec, i))) > rtol) flag = 0;
+        if (fabs(vector_val(&next_vec, i) -
+              vector_val(&cur_vec, i)) > rtol) flag = 0;
       }
       if (flag == 1) break;
       vector_swap_eff(&cur_vec, &next_vec);
@@ -182,7 +223,6 @@ void* thread_func_iir(void* arg) {
   vector *tmp = inverse_iter_reley(a);
   return tmp;
 }
-
 
 vector* concat_res(vector *a, vector *b, matrix *c) {
   vector *result = (vector *)malloc(sizeof(vector));

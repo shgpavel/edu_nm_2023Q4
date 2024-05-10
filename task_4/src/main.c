@@ -6,7 +6,7 @@
 #include "types/matrix.h"
 #include "types/eigenpair.h"
 #include "methods/rng.h"
-#include "methods/solv.h"
+#include "methods/qr.h"
 #include "methods/power_method.h"
 #include "methods/inverse_iteration.h"
 #include "common.h"
@@ -18,24 +18,25 @@ int main(void) {
   srand(time(NULL));
   
   matrix lambda, c, c_copy;
-  matrix_init(&lambda, n, sizeof(double));
-  matrix_init(&c, n, sizeof(double));
+  matrix_init(&lambda, n, n, sizeof(double));
+  matrix_init(&c, n, n, sizeof(double));
   matrix_fill_zero(&lambda);
   matrix_fill_zero(&c);
 
   for (size_t i = 0; i < lambda.rows; ++i) {
-    unwrap_double(matrix_get(&lambda, i, i)) = rng(BOUND_A, BOUND_B);
+    matrix_val(&lambda, i, i) = rng(BOUND_A, BOUND_B);
   }
 
   for (size_t i = 0; i < c.rows; ++i) {
     for (size_t j = 0; j < c.rows; ++j) {
-      unwrap_double(matrix_get(&c, i, j)) = rng(BOUND_A, BOUND_B);
+      matrix_val(&c, i, j) = rng(BOUND_A, BOUND_B);
     }
   }
 
   matrix_init_copy(&c_copy, &c);
 
   matrix_print(&lambda);
+  printf("\n");
   
   matrix *inv = matrix_inverse(&c);
   matrix_free(&c);
@@ -51,6 +52,7 @@ int main(void) {
   free(res);
 
   matrix_print(fin);
+  printf("\n");
   
   eigenpair *pm_res = power_method(fin);
   if (pm_res != NULL) {

@@ -33,26 +33,26 @@ eigenpair* power_method(matrix *a) {
     
     vector *tmp_v = matrix_on_vector(a, &cur_vec);
     vector_free(&result->eigenvector);
-    vector_copy_from_heap(&result->eigenvector, tmp_v);
+    vector_from_heap_to_stack(&result->eigenvector, tmp_v);
 
 		for (size_t i = 0; i < a->rows; ++i) {
-			double tmp = (unwrap_double(vector_get(&result->eigenvector, i)) /
-										          unwrap_double(vector_get(&cur_vec, i)));
-			if (fabs(unwrap_double(vector_get(&cur_vec, i))) < delta_c) tmp = 0.0;
+			double tmp = (vector_val(&result->eigenvector, i) /
+										          vector_val(&cur_vec, i));
+			if (fabs(vector_val(&cur_vec, i)) < delta_c) tmp = 0.0;
 			vector_change(&eigen_next, i, (void *)&tmp);
 		}
     vector_normalize(&result->eigenvector);
 
 		flag = 1;
 		for (size_t i = 0; i < a->rows; ++i) {
-			if (fabs(unwrap_double(vector_get(&eigen_next, i)) -
-               unwrap_double(vector_get(&eigen_prev, i))) > rtol) flag = 0;
+			if (fabs(vector_val(&eigen_next, i) -
+               vector_val(&eigen_prev, i)) > rtol) flag = 0;
 		}
     if (flag == 1) break;
 	}
 
 	for (size_t i = 0; i < a->rows; ++i) {
-		result->eigenvalue += unwrap_double(vector_get(&eigen_next, i));
+		result->eigenvalue += vector_val(&eigen_next, i);
 	}
   result->eigenvalue /= (double) a->rows;	
   

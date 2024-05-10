@@ -1,21 +1,24 @@
 #include <stdio.h>
 
+#include <jemalloc/jemalloc.h>
+
 #include "types/vector.h"
-#include "types/matrix.h"
 #include "types/pair.h"
-#include "methods/polynoms.h"
 #include "methods/lagrange.h"
-#include "methods/newton.h"
-#include "methods/lup.h"
 #include "draw/draw.h"
 #include "funcs/funcs.h"
 
-#include "common.h"
 
 int main(void) {
 
   pair segm = {1.0, 2.542};
 
+  str_func("cot (x) - x");
+  str_func("x = 1");
+  str_func("x = 2.542");
+
+  
+  
   /*
    evenly distributed nodes  
   for (size_t s = 10; s <= 15; ++s) {
@@ -35,8 +38,9 @@ int main(void) {
     vector_free(res);
   }
   */
+
   /* optimal nodes */
-  for (size_t s = 10; s <= 20; ++s) {
+  for (size_t s = 20; s <= 40; ++s) {
     vector points;
     vector_init(&points, s, sizeof(pair));
     for (size_t i = 0; i < s; ++i) {
@@ -49,10 +53,10 @@ int main(void) {
     
     add_func(res);
     vector_free(res);
+    free(res);
   }
   
-  str_func("cot (x) - x");
-
   plot();
+  clear_plot();
   return 0;
 }

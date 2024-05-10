@@ -25,7 +25,7 @@ $(DEPS): $(OUT_O_DIR)/%.d: %.c
 
 clean:
 	rm -rf $(OBJS) $(DEPS) $(OUT_O_DIR)
-	rm out.csv
+	rm -f out.csv
 
 NODEPS = clean
 

@@ -1,17 +1,14 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define addition 1e-3
+#define vector_val(v, i) *(double *)vector_get(v, i)
+#define matrix_val(m, i, j) *(double *)matrix_get(m, i, j)
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
-#ifndef M_PI_2
-#define M_PI_2 1.57079632679489661923
-#endif
-
-#define unwrap_double(ptr) (*(double *) (ptr))
-#define UNUSED(expr) do { (void)(expr); } while (0)
-#define unwrap_pair(ptr) (*(pair *) (ptr))
 #define rtol 1e-6
 #define epsilon_c 1e-8
 #define delta_c 1e-8

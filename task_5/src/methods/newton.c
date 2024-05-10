@@ -16,10 +16,10 @@ vector* newton_poly(vector *points) {
   vector_init(&tmp, points->size, sizeof(double));
   vector_init(&tmp_small, 2, sizeof(double));
   vector_push(result, &unwrap_pair(vector_get(points, 0)).b);
-  vector_fill_zero(&tmp_small);
+  vector_fill_smth(&tmp_small, 0.0);
 
   double g = 1;
-  vector_push()
+  //vector_push()
 
   for (size_t i = 0; i < points->size; ++i) {
     for (size_t j = 1; j < points->size; ++j) {
@@ -30,7 +30,7 @@ vector* newton_poly(vector *points) {
     }
     g *= unwrap_pair(vector_get(points, i)).b;
     for (size_t j = 0; j < i; ++j) {
-      vector_change();
+      //vector_change();
     }
   }
 

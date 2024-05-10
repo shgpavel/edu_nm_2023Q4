@@ -1,6 +1,10 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
+
+#include <stddef.h>
+#include "vector.h"
+
 typedef struct matrix_s {
   size_t rows;
   size_t cols;
