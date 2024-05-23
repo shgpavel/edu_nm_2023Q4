@@ -234,8 +234,9 @@ vector* concat_res(vector *a, vector *b, matrix *c) {
   for (size_t i = 0; i < b->size /* && i < c->rows */; ++i) {
     size_t seen = 0;
     for (size_t j = 0; j < result->size; ++j) {
-      if (((eigenpair *)vector_get(result, j))->eigenvalue ==
-          ((eigenpair *)vector_get(b, i))->eigenvalue) seen = 1; 
+      if (fabs(
+            ((eigenpair *)vector_get(result, j))->eigenvalue -
+            ((eigenpair *)vector_get(b, i))->eigenvalue) < rtol) seen = 1; 
     }
     if (!seen) {
       vector_push(result, vector_get(b, i));

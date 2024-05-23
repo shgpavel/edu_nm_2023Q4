@@ -52,14 +52,33 @@ void go_hessenberg(matrix *a) {
   vector_free(&v);
 }
 
-/*
-inline void rotation(matrix *a, size_t i, double c, double s) {
-  for (size_t k = i; k < a->rows; ++k) {
-    double tmp = -c * matrix_val(a, i, k) - s * matrix_val(a, i + 1, k);
-    matrix_val(a, i + 1, k) = s * matrix_val(a, i, k) + c * matrix_val(a, i + 1, k);
-    matrix_val(a, i, k) = tmp;
+void rotate(matrix *q, matrix *a, size_t i, double c, double s) {
+  for (size_t i = 0; i < a->rows - 1; ++i) { 
+    double t = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
+    double c = matrix_val(a, i, i) / t;
+    double s = matrix_val(a, i + 1, i) / t;
+
+    for (size_t k = i; k < a->rows; ++k) {
+      double tmp = -c * matrix_val(a, i, k) - s * matrix_val(a, i + 1, k);
+      matrix_val(a, i + 1, k) = s * matrix_val(a, i, k) - c * matrix_val(a, i + 1, k);
+      matrix_val(a, i, k) = tmp;
+    }
+
+    double all[] = {c, s, -c, -s};
+
+    
+    for (size_t k = i; k < q->rows; ++k) {
+      double tmp = -c * matrix_val(q, k, i) - s * matrix_val(q, k, i + 1);
+      matrix_val(q, k, i + 1) = s * matrix_val(q, k, i) - c * matrix_val(q, k, i + 1);
+      matrix_val(q, k, i) = tmp;
+    }
+    for (size_t k = 0; k < i; ++k) {
+      double tmp = c * matrix_val(q, k, i) - s * matrix_val(q, k, i + 1);
+      matrix_val(q, k, i + 1) = -c * matrix_val(q, k, i) - s * matrix_val(q, k, i + 1);
+      matrix_val(q, k, i) = tmp;
+    }
   }
-}*/
+}
 
 matrix* qr_decomp(matrix *m) {
   matrix *q = (matrix *)malloc(sizeof(matrix));
@@ -83,53 +102,29 @@ matrix* qr_decomp(matrix *m) {
 
   matrix_print(a);
   printf("\n");
-
-
   
-  for (size_t i = 0; i < a->rows - 1; ++i) {
-    //double t = matrix_val(a, i, i) / matrix_val(a, i + 1, i);
-    //double c = 1 / sqrt(1 + t * t);
-    //double s = t * c;
- 
-    double t = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
-    double c = matrix_val(a, i, i) / t;
-    double s = matrix_val(a, i + 1, i) / t;
-
-    for (size_t k = i; k < a->rows; ++k) {
-
-      double tmp = -c * matrix_val(a, i, k) - s * matrix_val(a, i + 1, k);
-      matrix_val(a, i + 1, k) = s * matrix_val(a, i, k) - c * matrix_val(a, i + 1, k);
-      matrix_val(a, i, k) = tmp;
-    
-      tmp = c * matrix_val(q, k, i) + s * matrix_val(q, k, i + 1);
-      matrix_val(q, k, i + 1) = -s * matrix_val(q, k, i) + c * matrix_val(q, k, i + 1);
-      matrix_val(q, k, i) = tmp;
-    }
- 
-
-  }
-
-
+  
   matrix_print(a);
   printf("\n");
   matrix_print(q);
 
   /*
-  for (size_t i = 0; i < a->rows - 1; ++i) {
-    double norm = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
-    double c = matrix_val(a, i, i)/norm;
-    double s = -matrix_val(a, i + 1, i)/norm;
-    rotation(a, i, c, s);
-    rotation(q, i, c, s);
+    for (size_t i = 0; i < a->rows - 1; ++i) { 
+    double t = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
+    double c = matrix_val(a, i, i) / t;
+    double s = matrix_val(a, i + 1, i) / t;
+
+    for (size_t k = i; k < a->rows; ++k) {
+      double tmp = -c * matrix_val(a, i, k) - s * matrix_val(a, i + 1, k);
+      matrix_val(a, i + 1, k) = s * matrix_val(a, i, k) - c * matrix_val(a, i + 1, k);
+      matrix_val(a, i, k) = tmp;
+    }
+    rotate_q(q, i, c, s);
+    //rotate_q(q, i, c, s);
+    
   }
+   */
   
-  for (size_t i = 0; i < a->rows - 1; ++i) {
-    double norm = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
-    double c = matrix_val(a, i, i)/norm;
-    double s = -matrix_val(a, i + 1, i)/norm;
-    rotation(q, i, c, s);
-  }
-  */
   return q;
 }
 

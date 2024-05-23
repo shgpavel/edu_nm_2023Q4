@@ -17,28 +17,48 @@
 #define CONTROL_POINTS 100
 #define M_POINTS 100
 
-vector* entry(size_t n, size_t m, size_t flag) {
-  matrix E;
-  vector f;
-  matrix_init(&E, m, n + 1, sizeof(double));
-  vector_init(&f, m, sizeof(double));
-  
+typedef init_data_s {
+  matrix *E;
+  vector *f;
+} init_data_t;
+
+init_data_t init_data(size_t n, size_t m) {
+  matrix *E = (matrix *)malloc(sizeof(matrix));
+  vector *f = (vector *)malloc(sizeof(vector));
+  vector_init(f, m, sizeof(double));
+  matrix_init(E, m, n + 1, sizeof(double));
+
   double add = (BOUND_B - BOUND_A) / ((double) m);
   double x = -1;
-
   for (size_t i = 0; i < m; ++i, x += add) {
-    double tmp = func(x) - 3 * addition;
-    double tmp_1 = func(x) + 6 * addition;
-    double tmp_2 = func(x) - addition;
-    double med = (tmp + tmp_1 + tmp_2) / 3.0;
+    double fir = func(x) - 3 * addition;
+    double sec = func(x) + 6 * addition;
+    double thr = func(x) - addition;
+    double med = (fir + sec + thr) / 3.0;
     vector_push(&f, (void *)&med);
-  
+
+    pair point_to_add = {x, med};
+    add_point(&point_to_add);
+    
     for (size_t j = 0; j < E.cols; ++j) {
-      double tmp = pow(x, ((double)j));
-      matrix_push(&E, (void *)&tmp);
+      double xinj = pow(x, ((double)j));
+      matrix_push(&E, (void *)&xinj);
     }
   }
+  init_data_t res = {E, f};
+  return res;
+}
 
+void matrix_to_n_degree(matrix *E, size_t n) {
+  matrix
+  for (size_t i = 0; i < E->rows; ++i) {
+    for (size_t j = E->cols; j <= n; ++j) {
+    
+    }
+  }
+}
+
+vector* entry(size_t n, size_t m, size_t flag) {
   vector *res = NULL;
   static size_t flag_orth = 0;
   static vector *orth;
@@ -67,9 +87,7 @@ vector* entry(size_t n, size_t m, size_t flag) {
 }
 
 int main(void) {
-  char *or_func = "x^2 tan(x)";
-  str_func(or_func);
-
+  
   FILE *csv = fopen("out.csv", "w");
   if (!csv) return -1;
   fprintf(csv, "n, sigma_ne, sigma_ore\n");
@@ -91,7 +109,7 @@ int main(void) {
     min_a = sum_a < min_a.a ? (pair){sum_a, n} : min_a;
     min_b = sum_b < min_b.a ? (pair){sum_b, n} : min_b;
 
-    fprintf(csv, "%zu, %lf, %lf\n", n, sum_a, sum_b);
+    fprintf(csv, "%zu, %le, %le\n", n, sum_a, sum_b);
     
     vector_free(a);
     vector_free(b);
@@ -115,7 +133,7 @@ int main(void) {
   add_func(best_ne);
   add_func(best_ore);
   plot();
-  sleep(1);
+  sleep(2);
   clear_plot();
   
   vector_free(best_ne);
@@ -128,8 +146,6 @@ int main(void) {
     free(vector_get(orth, i));
     orth->size--;
   }
-
-  str_func(or_func);  
 
   size_t orth_size = orth->size;
   for (size_t i = 5; i >= 1; --i, orth->size--) {

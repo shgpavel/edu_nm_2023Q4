@@ -8,7 +8,7 @@
 #include "methods/rng.h"
 #include "methods/qr.h"
 #include "methods/power_method.h"
-#include "methods/inverse_iteration.h"
+//#include "methods/inverse_iteration.h"
 #include "common.h"
 
 int main(void) {
@@ -64,6 +64,7 @@ int main(void) {
     printf("[Error]  Power iter failed\n");
    }
 
+  /*
   vector *it_res = inverse_iter(fin);
   for (size_t i = 0; it_res != NULL && i < it_res->size; ++i) {
     vector_print(&((eigenpair *)vector_get(it_res, i))->eigenvector);
@@ -75,12 +76,13 @@ int main(void) {
     vector_free(it_res);
     free(it_res);
   }
+  */
 
   go_hessenberg(fin);
 
   vector *res_qr = qr(fin);
   if (res_qr != NULL) {
-    printf("\n[LOG]  Result qr\n");
+    printf("\n[Log]  Result qr\n");
     vector_print(res_qr);
     printf("%zu\n", res_qr->size);
     vector_free(res_qr);
