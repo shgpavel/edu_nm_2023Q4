@@ -82,11 +82,8 @@ void matrix_print(matrix *m) {
   }
 }
 
-void matrix_fill_zero(matrix *m) {
-  for (size_t i = 0; i < m->rows * m->cols; ++i) {
-    double tmp = 0.0;
-    matrix_push(m, (void *)&tmp);
-  }
+void matrix_fill_smth(matrix *m, double t) {
+  vector_fill_smth(m->data, t);
 }
 
 double matrix_norm_inf(matrix *a) {
@@ -155,7 +152,7 @@ matrix* matrix_on_matrix(matrix *a, matrix *b) {
   }
   matrix *res = (matrix *)malloc(sizeof(matrix));
   matrix_init(res, a->rows, b->cols, a->data->type_size);
-  matrix_fill_zero(res);
+  matrix_fill_smth(res, 0.0);
   for (size_t i = 0; i < a->rows; ++i) {
     for (size_t j = 0; j < b->cols; ++j) {
       double sum = 0.0;

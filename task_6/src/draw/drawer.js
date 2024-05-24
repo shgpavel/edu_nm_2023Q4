@@ -9,12 +9,12 @@ let functionsList = [];
 app.post('/add-function', (req, res) => {
     const { latex } = req.body;
     functionsList.push(latex);
-    res.json({ status: "success", message: "Function added" });
+    res.json({ status: "success" });
 });
 
 app.post('/clear-functions', (req, res) => {
     functionsList = [];
-    res.json({ status: "success", message: "Functions list cleared" });
+    res.json({ status: "success" });
 });
 
 app.get('/plot', (req, res) => {

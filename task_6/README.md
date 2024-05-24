@@ -7,7 +7,7 @@ Overview:
 
 Status:
 =======
-    Pre-release
+    Release
 
 Contains:
 =========

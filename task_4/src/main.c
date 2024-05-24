@@ -20,8 +20,8 @@ int main(void) {
   matrix lambda, c, c_copy;
   matrix_init(&lambda, n, n, sizeof(double));
   matrix_init(&c, n, n, sizeof(double));
-  matrix_fill_zero(&lambda);
-  matrix_fill_zero(&c);
+  matrix_fill_smth(&lambda, 0.0);
+  matrix_fill_smth(&c, 0.0);
 
   for (size_t i = 0; i < lambda.rows; ++i) {
     matrix_val(&lambda, i, i) = rng(BOUND_A, BOUND_B);
