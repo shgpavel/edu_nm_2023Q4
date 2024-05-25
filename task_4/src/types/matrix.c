@@ -54,10 +54,6 @@ void* matrix_get(matrix *m, size_t row, size_t col) {
   return NULL;
 }
 
-void matrix_delete(matrix *m, size_t i, size_t j) {
-  vector_delete(m->data, i * m->cols + j);
-}
-
 void matrix_free(matrix *m) {
 	vector_free(m->data);
 	free(m->data);
@@ -65,7 +61,7 @@ void matrix_free(matrix *m) {
   m->cols = 0;
 }
 
-void matrix_copy(matrix *v, matrix *c) {
+void matrix_movenfree(matrix *v, matrix *c) {
   swap_xor_st(&v->rows, &c->rows);
   swap_xor_st(&v->cols, &c->cols);
   vector_swap_eff(v->data, c->data);

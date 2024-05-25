@@ -6,7 +6,6 @@
 #include "../types/matrix.h"
 #include "../common.h"
 
-#define MAX_ITER 1200
 
 void go_hessenberg(matrix *a) {
   matrix h;
@@ -46,7 +45,7 @@ void go_hessenberg(matrix *a) {
     matrix *res = matrix_on_matrix(tmp, &h);
     matrix_free(tmp);
     free(tmp);
-    matrix_copy(a, res);
+    matrix_movenfree(a, res);
   }
   matrix_free(&h);
   vector_free(&v);
@@ -60,7 +59,6 @@ matrix* qr_decomp(matrix *a) {
   for (size_t i = 0; i < q->rows; ++i) {
     matrix_val(q, i, i) = 1.0;
   }
-
 
   for (size_t i = 0; i < a->rows - 1; ++i) {
     double t, s = 0, c = 1;
@@ -83,10 +81,10 @@ matrix* qr_decomp(matrix *a) {
     matrix *g_trs = matrix_transpose(&g);
     
     matrix *a_next = matrix_on_matrix(&g, a);
-    matrix_copy(a, a_next);
+    matrix_movenfree(a, a_next);
     
     matrix *q_next = matrix_on_matrix(q, g_trs);
-    matrix_copy(q, q_next);
+    matrix_movenfree(q, q_next);
 
     matrix_free(&g);
     matrix_free(g_trs);
@@ -99,38 +97,39 @@ matrix* qr_decomp(matrix *a) {
 vector *qr(matrix *a) {
   vector *result = (vector *)malloc(sizeof(vector));
   vector_init(result, a->rows, sizeof(double));
-
-  matrix *q = qr_decomp(a);
   
-  for (; a->rows >= 2; ) {
+  while (a->rows >= 2) {
     double ann = matrix_val(a, a->rows - 1, a->rows - 1);
+    for (size_t j = 0; j < a->rows; ++j) {
+      matrix_val(a, j, j) -= ann;
+    }
+
+    matrix *q = qr_decomp(a);
     matrix *r_next = matrix_on_matrix(a, q);
     
     for (size_t j = 0; j < r_next->rows; ++j) {
       matrix_val(r_next, j, j) += ann;
     }
-    matrix_copy(a, r_next);
+    matrix_movenfree(a, r_next);
 
+    if (fabs(matrix_val(a, a->rows - 1, a->rows - 2)) < epsilon_c
+        && (fabs(matrix_val(a, a->rows - 1, a->rows - 1) - ann) < 0.3 * fabs(ann))) {
+      vector_push(result, &matrix_val(a, a->rows - 1, a->rows - 1));
 
-    if (fabs(matrix_val(a, a->rows - 1, a->rows - 2)) < 1e-3) { // && 
-        //(fabs(matrix_val(a, a->rows - 1, a->rows - 1) - ann) < 0.3 * ann)) {
-      vector_push(result, (void *)&ann);
-      for (size_t k = 0; k < a->rows; ++k) {
-        matrix_delete(a, k, a->rows - 1);
-        if (k != a->rows - 1) {
-          matrix_delete(a, a->rows - 1, k);
+      matrix *new_a = (matrix *)malloc(sizeof(matrix));
+      matrix_init(new_a, a->rows - 1, a->cols - 1, sizeof(double));
+      for (size_t k = 0; k < a->rows - 1; ++k) {
+        for (size_t j = 0; j < a->rows - 1; ++j) {
+          matrix_push(new_a, &matrix_val(a, k, j));
         }
       }
-      a->rows--;
-      a->cols--;
-      matrix *q_next = qr_decomp(a);
-      matrix_copy(q, q_next);
-    }
 
-    //matrix *q_next = qr_decomp(a);
-    //matrix_copy(q, q_next);
+      matrix_movenfree(a, new_a);
+    }
+    matrix_free(q);
+    free(q);
   }
 
-  matrix_free(q);
+  vector_push(result, (void *)&matrix_val(a, 0, 0));
   return result;
 }

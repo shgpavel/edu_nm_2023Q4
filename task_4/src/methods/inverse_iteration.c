@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 199309L
+
 #include <stdio.h>
 #include <math.h>
 #include <pthread.h>
@@ -12,7 +14,7 @@
 #include "gauss.h"
 #include "rng.h"
 
-#define MAX_ITER 1000
+#define MAX_ITER 10000
 #define MAX_TIME 1000000000
 
 /*
