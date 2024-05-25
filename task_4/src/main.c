@@ -20,8 +20,8 @@ int main(void) {
   matrix lambda, c, c_copy;
   matrix_init(&lambda, n, n, sizeof(double));
   matrix_init(&c, n, n, sizeof(double));
-  matrix_fill_zero(&lambda);
-  matrix_fill_zero(&c);
+  matrix_fill_smth(&lambda, 0.0);
+  matrix_fill_smth(&c, 0.0);
 
   for (size_t i = 0; i < lambda.rows; ++i) {
     matrix_val(&lambda, i, i) = rng(BOUND_A, BOUND_B);
@@ -64,6 +64,7 @@ int main(void) {
     printf("[Error]  Power iter failed\n");
    }
 
+ 
   vector *it_res = inverse_iter(fin);
   for (size_t i = 0; it_res != NULL && i < it_res->size; ++i) {
     vector_print(&((eigenpair *)vector_get(it_res, i))->eigenvector);
@@ -75,14 +76,14 @@ int main(void) {
     vector_free(it_res);
     free(it_res);
   }
+  
 
   go_hessenberg(fin);
 
   vector *res_qr = qr(fin);
   if (res_qr != NULL) {
-    printf("\n[LOG]  Result qr\n");
+    printf("\n[Log]  Result qr\n");
     vector_print(res_qr);
-    printf("%zu\n", res_qr->size);
     vector_free(res_qr);
     free(res_qr);
   } else {

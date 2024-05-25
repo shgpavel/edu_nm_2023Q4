@@ -54,10 +54,6 @@ void* matrix_get(matrix *m, size_t row, size_t col) {
   return NULL;
 }
 
-void matrix_delete(matrix *m, size_t i, size_t j) {
-  vector_delete(m->data, i * m->cols + j);
-}
-
 void matrix_free(matrix *m) {
 	vector_free(m->data);
 	free(m->data);
@@ -65,7 +61,7 @@ void matrix_free(matrix *m) {
   m->cols = 0;
 }
 
-void matrix_copy(matrix *v, matrix *c) {
+void matrix_movenfree(matrix *v, matrix *c) {
   swap_xor_st(&v->rows, &c->rows);
   swap_xor_st(&v->cols, &c->cols);
   vector_swap_eff(v->data, c->data);
@@ -82,11 +78,8 @@ void matrix_print(matrix *m) {
   }
 }
 
-void matrix_fill_zero(matrix *m) {
-  for (size_t i = 0; i < m->rows * m->cols; ++i) {
-    double tmp = 0.0;
-    matrix_push(m, (void *)&tmp);
-  }
+void matrix_fill_smth(matrix *m, double t) {
+  vector_fill_smth(m->data, t);
 }
 
 double matrix_norm_inf(matrix *a) {
@@ -155,7 +148,7 @@ matrix* matrix_on_matrix(matrix *a, matrix *b) {
   }
   matrix *res = (matrix *)malloc(sizeof(matrix));
   matrix_init(res, a->rows, b->cols, a->data->type_size);
-  matrix_fill_zero(res);
+  matrix_fill_smth(res, 0.0);
   for (size_t i = 0; i < a->rows; ++i) {
     for (size_t j = 0; j < b->cols; ++j) {
       double sum = 0.0;

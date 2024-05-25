@@ -6,7 +6,6 @@
 #include "../types/matrix.h"
 #include "../common.h"
 
-#define MAX_ITER 1200
 
 void go_hessenberg(matrix *a) {
   matrix h;
@@ -14,7 +13,7 @@ void go_hessenberg(matrix *a) {
   matrix_init(&h, a->rows, a->rows, sizeof(double));
   vector_init(&v, a->rows, sizeof(double));
   
-  matrix_fill_zero(&h);
+  matrix_fill_smth(&h, 0.0);
   vector_fill_smth(&v, 0.0);
     
   for (size_t i = 0; i < a->rows - 2; ++i) {
@@ -46,136 +45,91 @@ void go_hessenberg(matrix *a) {
     matrix *res = matrix_on_matrix(tmp, &h);
     matrix_free(tmp);
     free(tmp);
-    matrix_copy(a, res);
+    matrix_movenfree(a, res);
   }
   matrix_free(&h);
   vector_free(&v);
 }
 
-/*
-inline void rotation(matrix *a, size_t i, double c, double s) {
-  for (size_t k = i; k < a->rows; ++k) {
-    double tmp = -c * matrix_val(a, i, k) - s * matrix_val(a, i + 1, k);
-    matrix_val(a, i + 1, k) = s * matrix_val(a, i, k) + c * matrix_val(a, i + 1, k);
-    matrix_val(a, i, k) = tmp;
-  }
-}*/
-
-matrix* qr_decomp(matrix *m) {
+matrix* qr_decomp(matrix *a) {  
   matrix *q = (matrix *)malloc(sizeof(matrix));
-  matrix_init(q, 3, 3, sizeof(double));
+  matrix_init(q, a->rows, a->cols, sizeof(double));
 
+  matrix_fill_smth(q, 0.0);
   for (size_t i = 0; i < q->rows; ++i) {
-    for (size_t j = 0; j < q->cols; ++j) {
-      double tmp = (i == j) ? 1.0 : 0.0;
-      matrix_push(q, &tmp);
-    }
+    matrix_val(q, i, i) = 1.0;
   }
 
-  double ag[3][3] = {{5, -3, -1}, {-5, 2.08, 0.56}, {0, -0.44, -1.08}};
-  matrix *a = (matrix *)malloc(sizeof(matrix));
-  matrix_init(a, 3, 3, sizeof(double));
-  for (size_t i = 0; i < 3; ++i) {
-    for (size_t j = 0; j < 3; ++j) {
-      matrix_push(a, &ag[i][j]);
-    }
-  }
-
-  matrix_print(a);
-  printf("\n");
-
-
-  
   for (size_t i = 0; i < a->rows - 1; ++i) {
-    //double t = matrix_val(a, i, i) / matrix_val(a, i + 1, i);
-    //double c = 1 / sqrt(1 + t * t);
-    //double s = t * c;
- 
-    double t = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
-    double c = matrix_val(a, i, i) / t;
-    double s = matrix_val(a, i + 1, i) / t;
-
-    for (size_t k = i; k < a->rows; ++k) {
-
-      double tmp = -c * matrix_val(a, i, k) - s * matrix_val(a, i + 1, k);
-      matrix_val(a, i + 1, k) = s * matrix_val(a, i, k) - c * matrix_val(a, i + 1, k);
-      matrix_val(a, i, k) = tmp;
+    double t, s = 0, c = 1;
+    t = matrix_val(a, i, i) / matrix_val(a, i + 1, i);
+    c = 1 / sqrt(1 + t * t);
+    s = t * c;
     
-      tmp = c * matrix_val(q, k, i) + s * matrix_val(q, k, i + 1);
-      matrix_val(q, k, i + 1) = -s * matrix_val(q, k, i) + c * matrix_val(q, k, i + 1);
-      matrix_val(q, k, i) = tmp;
+    matrix g;
+    matrix_init(&g, a->rows, a->cols, sizeof(double));
+    matrix_fill_smth(&g, 0.0);
+    for (size_t k = 0; k < g.rows; ++k) {
+      matrix_val(&g, k, k) = 1.0;
     }
- 
+    
+    matrix_val(&g, i, i) = s;
+    matrix_val(&g, i, i + 1) = c;
+    matrix_val(&g, i + 1, i) = -c;
+    matrix_val(&g, i + 1, i + 1) = s;
 
-  }
+    matrix *g_trs = matrix_transpose(&g);
+    
+    matrix *a_next = matrix_on_matrix(&g, a);
+    matrix_movenfree(a, a_next);
+    
+    matrix *q_next = matrix_on_matrix(q, g_trs);
+    matrix_movenfree(q, q_next);
 
-
-  matrix_print(a);
-  printf("\n");
-  matrix_print(q);
-
-  /*
-  for (size_t i = 0; i < a->rows - 1; ++i) {
-    double norm = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
-    double c = matrix_val(a, i, i)/norm;
-    double s = -matrix_val(a, i + 1, i)/norm;
-    rotation(a, i, c, s);
-    rotation(q, i, c, s);
+    matrix_free(&g);
+    matrix_free(g_trs);
+    free(g_trs);
   }
   
-  for (size_t i = 0; i < a->rows - 1; ++i) {
-    double norm = hypot(matrix_val(a, i, i), matrix_val(a, i + 1, i));
-    double c = matrix_val(a, i, i)/norm;
-    double s = -matrix_val(a, i + 1, i)/norm;
-    rotation(q, i, c, s);
-  }
-  */
   return q;
 }
 
 vector *qr(matrix *a) {
   vector *result = (vector *)malloc(sizeof(vector));
   vector_init(result, a->rows, sizeof(double));
-
-  matrix *q = qr_decomp(a);
-
-  //matrix_print(a);
-  //printf("\n");
-  //matrix_print(q);
-  //printf("\n");  
-  /*
-  for (size_t i = 0; a->rows >= 2 && i < MAX_ITER; ++i) {
+  
+  while (a->rows >= 2) {
     double ann = matrix_val(a, a->rows - 1, a->rows - 1);
-    matrix *tmp = matrix_on_matrix(a, q);
-    //matrix_print(tmp);
-    
-    for (size_t j = 0; j < tmp->rows; ++j) {
-      matrix_val(tmp, j, j) += ann;
+    for (size_t j = 0; j < a->rows; ++j) {
+      matrix_val(a, j, j) -= ann;
     }
-    matrix_copy(a, tmp);
 
+    matrix *q = qr_decomp(a);
+    matrix *r_next = matrix_on_matrix(a, q);
+    
+    for (size_t j = 0; j < r_next->rows; ++j) {
+      matrix_val(r_next, j, j) += ann;
+    }
+    matrix_movenfree(a, r_next);
 
-    if (fabs(matrix_val(a, a->rows - 1, a->rows - 2)) < epsilon_c ) {//&& 
-        //(fabs(matrix_val(a, a->rows - 1, a->rows - 1) - ann) < 0.3 * ann)) {
-      vector_push(result, matrix_get(a, a->rows - 1, a->rows - 1));
-      for (size_t k = 0; k < a->rows; ++k) {
-        matrix_delete(a, k, a->rows - 1);
-        matrix_delete(q, k, q->rows - 1);
-        if (k != a->rows - 1) {
-          matrix_delete(a, a->rows - 1, k);
-          matrix_delete(q, q->rows - 1, k);
+    if (fabs(matrix_val(a, a->rows - 1, a->rows - 2)) < epsilon_c
+        && (fabs(matrix_val(a, a->rows - 1, a->rows - 1) - ann) < 0.3 * fabs(ann))) {
+      vector_push(result, &matrix_val(a, a->rows - 1, a->rows - 1));
+
+      matrix *new_a = (matrix *)malloc(sizeof(matrix));
+      matrix_init(new_a, a->rows - 1, a->cols - 1, sizeof(double));
+      for (size_t k = 0; k < a->rows - 1; ++k) {
+        for (size_t j = 0; j < a->rows - 1; ++j) {
+          matrix_push(new_a, &matrix_val(a, k, j));
         }
       }
-      a->rows--;
-      a->cols--;
-      q->rows--;
-      q->cols--;
-      //matrix_free(q);
-      //free(q);
-      //q = qr_decomp(a);
+
+      matrix_movenfree(a, new_a);
     }
+    matrix_free(q);
+    free(q);
   }
-  */
-  matrix_free(q);
+
+  vector_push(result, (void *)&matrix_val(a, 0, 0));
   return result;
 }

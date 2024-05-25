@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 199309L
+
 #include <stdio.h>
 #include <math.h>
 #include <pthread.h>
@@ -12,7 +14,7 @@
 #include "gauss.h"
 #include "rng.h"
 
-#define MAX_ITER 1000
+#define MAX_ITER 10000
 #define MAX_TIME 1000000000
 
 /*
@@ -234,8 +236,9 @@ vector* concat_res(vector *a, vector *b, matrix *c) {
   for (size_t i = 0; i < b->size /* && i < c->rows */; ++i) {
     size_t seen = 0;
     for (size_t j = 0; j < result->size; ++j) {
-      if (((eigenpair *)vector_get(result, j))->eigenvalue ==
-          ((eigenpair *)vector_get(b, i))->eigenvalue) seen = 1; 
+      if (fabs(
+            ((eigenpair *)vector_get(result, j))->eigenvalue -
+            ((eigenpair *)vector_get(b, i))->eigenvalue) < rtol) seen = 1; 
     }
     if (!seen) {
       vector_push(result, vector_get(b, i));

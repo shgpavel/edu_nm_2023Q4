@@ -1,8 +1,8 @@
-CFLAGS := -Wall -Wextra -O3 -std=gnu2x $(CFLAGS)
+CFLAGS := -Wall -Wextra -O3 -std=c2x $(CFLAGS)
 LDFLAGS := -lm -ljemalloc -lpthread $(LDFLAGS)
 
-CC = gcc
-LD = gcc
+CC = clang
+LD = clang
 
 OUT_O_DIR = build
 SRCS_DIRS = . methods types

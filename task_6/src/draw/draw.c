@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 
 #include "../common.h"
+#include "../types/pair.h"
 #include "../types/vector.h"
 
 #define str_limit 9000
@@ -100,6 +101,12 @@ void add_func(vector *target) {
   char *p = go_str(target);
   str_func(p);
   free(p);
+}
+
+void add_point(pair *a) {
+  char buf[50];
+  sprintf(buf, "(%lf, %lf)", a->a, a->b);
+  str_func(buf);
 }
 
 void plot() {

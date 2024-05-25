@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 #include <unistd.h>
 #include <jemalloc/jemalloc.h>
@@ -14,37 +15,51 @@
 #include "draw/draw.h"
 #include "common.h"
 
-#define CONTROL_POINTS 100
-#define M_POINTS 100
+#define CONTROL_POINTS 120
+#define M_POINTS 120
 
-vector* entry(size_t n, size_t m, size_t flag) {
+/*
+  This func needs an obvious optimization but
+  I already made such crap arch so it will continue
+  to stay just as shame board
+*/
+vector* entry(size_t n, size_t m, size_t flag) {  
   matrix E;
   vector f;
   matrix_init(&E, m, n + 1, sizeof(double));
   vector_init(&f, m, sizeof(double));
-  
-  double add = (BOUND_B - BOUND_A) / ((double) m);
-  double x = -1;
-
-  for (size_t i = 0; i < m; ++i, x += add) {
-    double tmp = func(x) - 3 * addition;
-    double tmp_1 = func(x) + 6 * addition;
-    double tmp_2 = func(x) - addition;
-    double med = (tmp + tmp_1 + tmp_2) / 3.0;
-    vector_push(&f, (void *)&med);
-  
-    for (size_t j = 0; j < E.cols; ++j) {
-      double tmp = pow(x, ((double)j));
-      matrix_push(&E, (void *)&tmp);
-    }
-  }
 
   vector *res = NULL;
   static size_t flag_orth = 0;
   static vector *orth;
 
-  if (flag == 0) {
+  
+  double add = (BOUND_B - BOUND_A) / ((double) m);
+  double x = -1;
 
+  for (size_t i = 0; i < m; ++i, x += add) {
+
+    double val;
+    int chs = rand() % 3 + 1;
+    switch (chs) {
+      case 1:
+        val = func(x) - 3 * addition;
+      case 2:
+        val = func(x) + 6 * addition;
+      case 3:
+        val = func(x) - addition;
+    }
+    vector_push(&f, (void  *)&val);
+    
+    for (size_t j = 0; j < E.cols; ++j) {
+      double xinj = pow(x, ((double)j));
+      matrix_push(&E, (void *)&xinj);
+    }
+  }
+
+    
+  if (flag == 0) {
+    
     res = normal_equations(&E, &f);
 
   } else if (flag == 1) {
@@ -59,6 +74,11 @@ vector* entry(size_t n, size_t m, size_t flag) {
     matrix_free(&E);
     vector_free(&f);
     return orth;
+  } else if (flag == 4) {
+    for (size_t i = 0; i < E.rows; ++i) {
+      pair point = {matrix_val(&E, i, 1), vector_val(&f, i)};
+      add_point(&point);
+    }    
   }
   
   matrix_free(&E);
@@ -67,9 +87,7 @@ vector* entry(size_t n, size_t m, size_t flag) {
 }
 
 int main(void) {
-  char *or_func = "x^2 tan(x)";
-  str_func(or_func);
-
+  
   FILE *csv = fopen("out.csv", "w");
   if (!csv) return -1;
   fprintf(csv, "n, sigma_ne, sigma_ore\n");
@@ -114,7 +132,10 @@ int main(void) {
   
   add_func(best_ne);
   add_func(best_ore);
+
+  entry(1, M_POINTS, 4);
   plot();
+
   sleep(1);
   clear_plot();
   
@@ -128,8 +149,6 @@ int main(void) {
     free(vector_get(orth, i));
     orth->size--;
   }
-
-  str_func(or_func);  
 
   size_t orth_size = orth->size;
   for (size_t i = 5; i >= 1; --i, orth->size--) {
@@ -145,7 +164,8 @@ int main(void) {
     free(orth_i);
   }
   orth->size = orth_size;
-  
+
+  entry(1, M_POINTS, 4);
   plot();
   clear_plot();
   
