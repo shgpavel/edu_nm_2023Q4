@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include <jemalloc/jemalloc.h>
 
 #include "../common.h"
@@ -31,14 +32,18 @@ vector* lagrange_poly(vector *points) {
       if (j == 0 || (j == 1 && i == 0)) {
         vector_assign(&v, &tmp);
       } else {
-        v = poly_mult(&v, &tmp);
-      } 
+        vector v_next = poly_mult(&v, &tmp);
+        vector_swap_eff(&v, &v_next);
+        vector_free(&v_next);
+      }
     }
 
     for (size_t j = 0; j < points->size; ++j) {
       if (j != i) {
-        vector_mult(&v,
-                    1 / (pair_get(points, i).a - pair_get(points, j).a));
+        double denom = pair_get(points, i).a - pair_get(points, j).a;
+        if (fabs(denom) > divtol) {
+          vector_mult(&v, 1 / denom);
+        }
       }
     }
     vector_mult(&v, pair_get(points, i).b);

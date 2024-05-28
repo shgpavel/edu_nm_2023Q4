@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include <jemalloc/jemalloc.h>
 
 #include "polynoms.h"
@@ -7,34 +8,57 @@
 #include "../types/pair.h"
 #include "../types/vector.h"
 
+
 vector* newton_poly(vector *points) {
-  vector *result = (vector*)malloc(sizeof(vector));
-  vector tmp;
-  
-  vector tmp_small;
-  vector_init(result, points->size, sizeof(double));
-  vector_init(&tmp, points->size, sizeof(double));
-  vector_init(&tmp_small, 2, sizeof(double));
-  vector_push(result, &unwrap_pair(vector_get(points, 0)).b);
-  vector_fill_smth(&tmp_small, 0.0);
+  vector *res = (vector*)malloc(sizeof(vector));
+  vector_init(res, points->size, sizeof(double));
 
-  double g = 1;
-  //vector_push()
+  vector xpolres;
+  vector xminus;
 
-  for (size_t i = 0; i < points->size; ++i) {
-    for (size_t j = 1; j < points->size; ++j) {
-      if (i != j) {
-        g /= unwrap_pair(vector_get(points, i)).a - 
-              unwrap_pair(vector_get(points, j)).a;
+  vector_init(&xpolres, 2, sizeof(double));
+  vector_init(&xminus, 2, sizeof(double));
+
+  vector_fill_smth(res, 0.0);
+  vector_fill_smth(&xminus, 1.0);
+
+  for (size_t k = 0; k < points->size; ++k) {
+    double g = 1;
+    double f = 0;
+    for (size_t i = 0; i <= k; ++i) {
+      g = 1;
+      for (size_t j = 0; j <= k; ++j) {
+        if (i != j) {
+          double denom = pair_get(points, i).a - pair_get(points, j).a;
+          if (fabs(denom) > divtol) g /= denom;
+        }
+      }
+      f += g * pair_get(points, i).b;
+    }
+    
+    for (size_t i = 0; i < k; ++i) {
+      vector_val(&xminus, 0) = -(pair_get(points, i).a);
+      if (i != 0) {
+        vector xpolres_next = poly_mult(&xpolres, &xminus);
+        vector_swap_eff(&xpolres, &xpolres_next);
+        vector_free(&xpolres_next);
+      } else {
+        vector_assign(&xpolres, &xminus);
       }
     }
-    g *= unwrap_pair(vector_get(points, i)).b;
-    for (size_t j = 0; j < i; ++j) {
-      //vector_change();
-    }
+    vector_mult(&xpolres, f);
+    poly_sum(res, &xpolres);
   }
 
-
-  vector_print(result); 
-  return result;
+  vector_val(&xminus, 0) = pair_get(points, 0).b;
+  vector_val(&xminus, 1) = 0;
+  poly_sum(res, &xminus);
+  
+  vector_free(&xminus);
+  vector_free(&xpolres);
+  
+  return res;
 }
+
+/* LEN' but */
+void newton_step(vector *res, vector *points);

@@ -4,6 +4,7 @@
 #include <curl/curl.h>
 
 #include "../common.h"
+#include "../types/pair.h"
 #include "../types/vector.h"
 
 #define str_limit 9000
@@ -102,7 +103,30 @@ void add_func(vector *target) {
   free(p);
 }
 
-void plot() {
+void add_point(pair *a) {
+  char buf[50];
+  sprintf(buf, "(%lg, %lg)", a->a, a->b);
+  str_func(buf);
+}
+
+void add_spline_func(vector *target, vector *points) {
+  for (size_t i = 0; i < target->size; ++i) {
+    char *res_str = malloc(str_limit);
+    char *p = go_str(vector_get(target, i));
+    char limits[50];
+    sprintf(limits, "{%lg <= x <= %lg:",
+            pair_get(points, i).a,
+            pair_get(points, i + 1).a);
+    strcpy(res_str, limits);
+    strcat(res_str, p);
+    strcat(res_str, "}");
+    str_func(res_str);
+    free(p);
+    free(res_str);
+  }
+}
+
+void plot(size_t spline_flag) {
   CURL *curl;
   CURLcode res;
   struct memory_struct chunk;
@@ -113,7 +137,10 @@ void plot() {
   curl_global_init(CURL_GLOBAL_ALL);
   curl = curl_easy_init();
   if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/plot");
+    if (spline_flag == 1) {
+      curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/plot-splines");
+    } else curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/plot");
+    
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 
