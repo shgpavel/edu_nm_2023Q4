@@ -64,6 +64,7 @@ int main(void) {
     printf("[Error]  Power iter failed\n");
    }
 
+ 
   vector *it_res = inverse_iter(fin);
   for (size_t i = 0; it_res != NULL && i < it_res->size; ++i) {
     vector_print(&((eigenpair *)vector_get(it_res, i))->eigenvector);
@@ -75,6 +76,7 @@ int main(void) {
     vector_free(it_res);
     free(it_res);
   }
+  
 
   go_hessenberg(fin);
 
