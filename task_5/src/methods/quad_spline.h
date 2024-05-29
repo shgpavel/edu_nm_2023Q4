@@ -2,6 +2,6 @@
 #define QUAD_SPLINE_H
 
 
-vector* quad_spline(vector *);
+vector* quad_spline(vector *, size_t);//, vector *);
 
 #endif

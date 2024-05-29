@@ -61,7 +61,7 @@ char *go_str(vector *target) {
       sprintf(ptr, "%lgx^{%zu}", vector_val(target, i), i);
     }
     ptr += strlen(ptr);
-    if ((i < target->size - 1) && vector_val(target, i + 1) > 0) {
+    if ((i < target->size - 1) && vector_val(target, i + 1) >= 0) {
       sprintf(ptr, "%s", "+");
       ++ptr;
     }

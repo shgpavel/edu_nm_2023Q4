@@ -8,6 +8,7 @@
 #include "methods/newton.h"
 #include "methods/linear_spline.h"
 #include "methods/quad_spline.h"
+#include "methods/qube_spline.h"
 #include "draw/draw.h"
 #include "funcs/funcs.h"
 
@@ -31,6 +32,7 @@ void test() {
 
   vector *res = newton_poly(&points);
   vector_print(res);
+
   vector_free(res);
   free(res);
 }
@@ -52,7 +54,7 @@ void test_spline() {
   }
   vector_print_pairs(&points);
 
-  vector *res = quad_spline(&points);
+  vector *res = qube_spline(&points);
   add_spline_func(res, &points);
   
   for (size_t i = 0; i < res->size; ++i) {
