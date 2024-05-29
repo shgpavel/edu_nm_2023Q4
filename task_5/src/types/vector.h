@@ -28,6 +28,7 @@ void   vector_swap_eff(vector *, vector *);
 void   vector_print(vector *);
 void   vector_print_pairs(vector *);
 void   vector_fill_smth(vector *, double);
+void   vector_reverse(vector *);  /* only for doubles */
 void   vector_mult(vector *v, double a);
 double vector_diff(vector *, vector *);
 double vector_sclr_prod(vector *, vector *);

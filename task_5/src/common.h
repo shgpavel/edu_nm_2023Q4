@@ -17,6 +17,7 @@
 #define vector_val(v, i) (*(double *)vector_get(v, i))
 #define matrix_val(m, i, j) (*(double *)matrix_get(m, i, j))
 
+#define divtol 1e-14
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
 #endif

@@ -159,6 +159,20 @@ void vector_fill_smth(vector *v, double x) {
   }
 }
 
+void vector_reverse(vector *v) {
+  size_t start = 0, end = v->size - 1;
+  double tmp;
+
+  while (start < end) {
+    tmp = vector_val(v, start);
+    vector_val(v, start) = vector_val(v, end);
+    vector_val(v, end) = tmp;
+
+    ++start;
+    --end;
+  }
+}
+
 void vector_mult(vector *v, double a) {
   if (v->type_size == sizeof(double)) {
     for (size_t i = 0; i < v->size; ++i) {

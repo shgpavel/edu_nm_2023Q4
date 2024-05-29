@@ -22,7 +22,7 @@ void     matrix_delete(matrix *, size_t, size_t);
 void     matrix_free(matrix *);
 void     matrix_copy(matrix *, matrix *);
 void     matrix_print(matrix *);
-void     matrix_fill_zero(matrix *);
+void     matrix_fill_smth(matrix *, double);
 double   matrix_norm_inf(matrix *);
 matrix*  matrix_transpose(matrix *);
 vector*  matrix_on_vector(matrix *, vector *);

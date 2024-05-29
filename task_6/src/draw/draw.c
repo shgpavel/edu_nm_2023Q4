@@ -105,7 +105,7 @@ void add_func(vector *target) {
 
 void add_point(pair *a) {
   char buf[50];
-  sprintf(buf, "(%lf, %lf)", a->a, a->b);
+  sprintf(buf, "(%lg, %lg)", a->a, a->b);
   str_func(buf);
 }
 
