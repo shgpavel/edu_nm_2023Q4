@@ -10,7 +10,7 @@
 void finalize(matrix *a, vector *b, vector *solution) {
   for (size_t i = a->rows; i > 0; ) {
     --i;
-    if (i < a->rows) {
+    if (i < a->cols) {
       vector_val(solution, i) = vector_val(b, i);
       for (size_t j = i + 1; j < a->cols; ++j) {
         vector_val(solution, i) -= matrix_val(a, i, j) * vector_val(solution, j);

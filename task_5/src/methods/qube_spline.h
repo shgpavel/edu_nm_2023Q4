@@ -2,6 +2,6 @@
 #define QUBE_SPLINE_H
 
 
-vector* qube_spline(vector *);
+vector* qube_spline(vector *, size_t, vector *);
 
 #endif

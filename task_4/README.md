@@ -8,19 +8,19 @@
 	- Iteration method is good
 
 ## Status:
-    Pre-release
+    Released (commiting about issues)
 
 ## Contains:
 	src/methods/gauss.c             -- just solving SLAE
 	src/methods/inverse_iteration.c -- ii algo with two realizations
-    
+
     reley shifts and regular from -ninf to +ninf(however the second one is trash)
-	
-    src/methods/power_method.c      -- simple power method 
+
+    src/methods/power_method.c      -- simple power method
 	src/methods/qr.c                -- QR method eigenvalues
-    
+
     also contains hessenberg transform and givens rotations on hessenberg matrix
-    
+
     src/methods/rng.h               -- simple time-based std rng
     src/types/matrix.c              -- matrix methods
 	src/types/vector.c              -- vector methods

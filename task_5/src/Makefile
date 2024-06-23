@@ -25,6 +25,8 @@ $(DEPS): $(OUT_O_DIR)/%.d: %.c
 
 clean:
 	rm -rf $(OBJS) $(DEPS) $(OUT_O_DIR)
+	rm -f lagr.csv newton.csv lin.csv quad.csv qube.csv
+	rm -f newtonp.csv matrix.csv s20.csv
 
 NODEPS = clean
 

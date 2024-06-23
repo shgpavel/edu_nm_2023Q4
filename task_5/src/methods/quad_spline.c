@@ -8,10 +8,11 @@
 #include "gauss.h"
 
 
-vector* quad_spline(vector *points, size_t index) {//, vector *res) {
-  vector *res = (vector *)malloc(sizeof(vector));
-  vector_init(res, 2, sizeof(vector));
-  
+vector* quad_spline(vector *points, size_t index, vector *res) {
+  if (res == NULL || index > points->size - 3) {
+    return NULL;
+  }
+    
   matrix A;
   matrix_init(&A, 6, 6, sizeof(double));
   matrix_fill_smth(&A, 0.0);

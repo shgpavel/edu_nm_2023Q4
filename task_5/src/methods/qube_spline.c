@@ -13,33 +13,34 @@ double inline get_hi(vector *points, size_t i) {
   return pair_get(points, i + 1).a - pair_get(points, i).a;
 }
 
-vector* qube_spline(vector *points) {
-  vector *res = (vector *)malloc(sizeof(vector));
-  vector_init(res, points->size - 1, sizeof(vector));
-
+vector* qube_spline(vector *points, size_t index, vector *res) {
+  if (res == NULL || index > points->size - 4) {
+    return NULL;
+  }
+  
   matrix H;
-  matrix_init(&H, points->size - 2, points->size - 2, sizeof(double));
+  matrix_init(&H, 2, 2, sizeof(double));
   matrix_fill_smth(&H, 0.0);
   
   
-  matrix_val(&H, 0, 0) = 2 * (get_hi(points, 0)
-                            + get_hi(points, 0 + 1));
-  matrix_val(&H, 0 + 1, 0 + 1) = 2 * (get_hi(points, 1)
-                                    + get_hi(points, 1 + 1));
-  matrix_val(&H, 0, 0 + 1) = get_hi(points, 0 + 1);
-  matrix_val(&H, 0 + 1, 0) = matrix_val(&H, 0, 0 + 1);
+  matrix_val(&H, 0, 0) = 2 * (get_hi(points, index)
+                            + get_hi(points, index + 1));
+  matrix_val(&H, 1, 1) = 2 * (get_hi(points, index + 1)
+                                    + get_hi(points, index + 2));
+  matrix_val(&H, 0, 1) = get_hi(points, index + 1);
+  matrix_val(&H, 1, 0) = matrix_val(&H, 0, 1);
   
   vector y;
-  vector_init(&y, points->size - 2, sizeof(double));
-  vector_fill_smth(&y, 0.0);  
+  vector_init(&y, 2, sizeof(double));
+  vector_fill_smth(&y, 0.0);
   
-  for (size_t i = 0; i < points->size - 2; ++i) {
+  for (size_t i = 0, j = index; i < 2; ++i, ++j) {
     vector_val(&y, i) =
-      6 * (pair_get(points, i + 2).b - pair_get(points, i + 1).b)
-      / get_hi(points, i + 1);
+      6 * (pair_get(points, j + 2).b - pair_get(points, j + 1).b)
+      / get_hi(points, j + 1);
     vector_val(&y, i) -=
-      6 * (pair_get(points, i + 1).b - pair_get(points, i).b)
-      / get_hi(points, i);
+      6 * (pair_get(points, j + 1).b - pair_get(points, j).b)
+      / get_hi(points, j);
   }
   
   vector *uay = gauss(&H, &y);
@@ -50,22 +51,22 @@ vector* qube_spline(vector *points) {
   vector_push(uay, &natural_spline);
   vector_reverse(uay);
   
-  for (size_t i = 0; i < uay->size - 1; ++i) {
-    double y_i_strh = (pair_get(points, i + 1).b - pair_get(points, i).b) / get_hi(points, i);
-    y_i_strh -= (vector_val(uay, i + 1) * get_hi(points, i) / 6);
-    y_i_strh -= (vector_val(uay, i) * get_hi(points, i) / 3);
+  for (size_t i = 0, j = index; i < uay->size - 1; ++i, ++j) {
+    double y_i_strh = (pair_get(points, j + 1).b - pair_get(points, j).b) / get_hi(points, j);
+    y_i_strh -= (vector_val(uay, i + 1) * get_hi(points, j) / 6);
+    y_i_strh -= (vector_val(uay, i) * get_hi(points, j) / 3);
 
     vector *app = (vector *)malloc(sizeof(vector));
     vector_init(app, 4, sizeof(double));
     vector_fill_smth(app, 0.0);
   
-    vector_val(app, 0) = pair_get(points, i).b;
+    vector_val(app, 0) = pair_get(points, j).b;
 
     vector xminus, xminus2;
     vector_init(&xminus, 2, sizeof(double));
     
     vector_fill_smth(&xminus, 1.0);
-    vector_val(&xminus, 0) = -pair_get(points, i).a;
+    vector_val(&xminus, 0) = -pair_get(points, j).a;
     vector_init_copy(&xminus2, &xminus);
 
     vector_mult(&xminus, y_i_strh);
@@ -79,7 +80,7 @@ vector* qube_spline(vector *points) {
 
     mult = poly_mult(&xminus, &xminus2);
     vector mult_c = poly_mult(&mult, &xminus);
-    vector_mult(&mult_c, (vector_val(uay, i + 1) - vector_val(uay, i)) / (6 * get_hi(points, i)));
+    vector_mult(&mult_c, (vector_val(uay, i + 1) - vector_val(uay, i)) / (6 * get_hi(points, j)));
     poly_sum(app, &mult_c);
 
     vector_push(res, app);

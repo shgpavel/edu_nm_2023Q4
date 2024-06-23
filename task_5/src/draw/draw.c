@@ -7,7 +7,7 @@
 #include "../types/pair.h"
 #include "../types/vector.h"
 
-#define str_limit 9000
+#define str_limit 4000
 
 struct memory_struct {
   size_t size;
@@ -110,7 +110,7 @@ void add_point(pair *a) {
 }
 
 void add_spline_func(vector *target, vector *points) {
-  for (size_t i = 0; i < target->size; ++i) {
+  for (size_t i = 0; i < points->size - 1 && i < target->size; ++i) {
     char *res_str = malloc(str_limit);
     char *p = go_str(vector_get(target, i));
     char limits[50];

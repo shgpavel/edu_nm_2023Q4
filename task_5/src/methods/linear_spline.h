@@ -2,7 +2,6 @@
 #define LINEAR_SPLINE_H
 
 
-vector* linear_spline(vector *, size_t);//, vector *);
-void    reverse_vector(vector *);
+vector* linear_spline(vector *, size_t, vector *);
 
 #endif

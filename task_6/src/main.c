@@ -15,8 +15,10 @@
 #include "draw/draw.h"
 #include "common.h"
 
-#define CONTROL_POINTS 120
-#define M_POINTS 120
+#define CONTROL_POINTS 100
+#define M_POINTS 100
+#define at_one_point 3
+
 
 /*
   This func needs an obvious optimization but
@@ -26,8 +28,8 @@
 vector* entry(size_t n, size_t m, size_t flag) {  
   matrix E;
   vector f;
-  matrix_init(&E, m, n + 1, sizeof(double));
-  vector_init(&f, m, sizeof(double));
+  matrix_init(&E, m * at_one_point, n + 1, sizeof(double));
+  vector_init(&f, m * at_one_point, sizeof(double));
 
   vector *res = NULL;
   static size_t flag_orth = 0;
@@ -37,17 +39,19 @@ vector* entry(size_t n, size_t m, size_t flag) {
   double add = (BOUND_B - BOUND_A) / ((double) m);
   double x = -1;
 
-  for (size_t i = 0; i < m; ++i, x += add) {
-
+  size_t point_flag = 1;
+  for (size_t i = 0; i < m * at_one_point; ++i) {
     double val;
-    int chs = rand() % 3 + 1;
-    switch (chs) {
+    switch (point_flag) {
       case 1:
         val = func(x) - 3 * addition;
+        break;
       case 2:
         val = func(x) + 6 * addition;
+        break;
       case 3:
         val = func(x) - addition;
+        break;
     }
     vector_push(&f, (void  *)&val);
     
@@ -55,11 +59,12 @@ vector* entry(size_t n, size_t m, size_t flag) {
       double xinj = pow(x, ((double)j));
       matrix_push(&E, (void *)&xinj);
     }
+    point_flag = (point_flag % 3) + 1;
+    if (point_flag == 1) x += add;
   }
+    
+  if (flag == 0) { 
 
-    
-  if (flag == 0) {
-    
     res = normal_equations(&E, &f);
 
   } else if (flag == 1) {
@@ -67,7 +72,7 @@ vector* entry(size_t n, size_t m, size_t flag) {
       orth = orth_init(n, &E);
       flag_orth = 1;
     }
-
+    
     res = orth_step(n, &E, &f, orth);
 
   } else if (flag == 3) {
@@ -80,7 +85,7 @@ vector* entry(size_t n, size_t m, size_t flag) {
       add_point(&point);
     }    
   }
-  
+
   matrix_free(&E);
   vector_free(&f);
   return res;
@@ -93,8 +98,8 @@ int main(void) {
   fprintf(csv, "n, sigma_ne, sigma_ore\n");
 
   pair min_a = {1.0, 0.0}, min_b = {1.0, 0.0};
-  for (size_t n = 10; n < 120; ++n) {
-    vector *a = entry(n, M_POINTS, 0);
+  for (size_t n = 2; n < 100; ++n) {
+    vector *a = entry(n - 1, M_POINTS, 0);
     vector *b = entry(n, M_POINTS, 1);
     
     double add = (BOUND_B - BOUND_A) / CONTROL_POINTS;
@@ -106,10 +111,10 @@ int main(void) {
       sum_b += pow((poly_val(b, x) - func(x)), 2);
     }
 
-    min_a = sum_a < min_a.a ? (pair){sum_a, n} : min_a;
+    min_a = sum_a < min_a.a ? (pair){sum_a, n - 1} : min_a;
     min_b = sum_b < min_b.a ? (pair){sum_b, n} : min_b;
-
-    fprintf(csv, "%zu, %lf, %lf\n", n, sum_a, sum_b);
+    
+    fprintf(csv, "%zu, %lg, %lg\n", n - 1, sum_a, sum_b);
     
     vector_free(a);
     vector_free(b);
@@ -125,17 +130,17 @@ int main(void) {
     free(vector_get(orth, i));
     orth->size--;
   }
-
+  
+  printf("\n%zu %zu\n", (size_t)min_a.b, (size_t)min_b.b);
   vector *best_ne = entry((size_t)min_a.b, M_POINTS, 0);
   vector *best_ore = entry((size_t)min_b.b, M_POINTS, 1);
-  printf("\n%zu %zu\n", (size_t)min_a.b, (size_t)min_b.b);
-  
+
   add_func(best_ne);
   add_func(best_ore);
 
   entry(1, M_POINTS, 4);
-  plot();
 
+  plot();
   sleep(1);
   clear_plot();
   

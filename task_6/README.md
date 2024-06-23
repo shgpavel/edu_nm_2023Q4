@@ -1,11 +1,11 @@
 ## Overview:
     First method may be a bit faster than
-	optimized version (orth poly). 
+	optimized version (orth poly).
 	I do not see more easy and efficient way to code
 	second method so if you have any ideas please contact.
 
 ## Status:
-    Release
+    Released
 
 ## Contains:
 	src/draw/draw.c           -- using curl to send funcs to the server

@@ -7,7 +7,7 @@
 #include "../types/pair.h"
 #include "../types/vector.h"
 
-#define str_limit 9000
+#define str_limit 1000
 
 struct memory_struct {
   size_t size;

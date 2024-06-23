@@ -45,7 +45,7 @@ vector* orth_step(size_t n, matrix *E, vector *f, vector *orth_poly) {
     vector_push(&x_vec, &beta);
     vector_push(&x_vec, &alpha);
   }
-  
+
   for (size_t i = orth_poly->size; orth_poly->size < n; ++i) {
     vector q_i, q_i_mo;
     double sum_uppr = 0.0, sum_bott= 0.0, sum_uppr_b = 0.0, sum_bott_b = 0.0;
@@ -91,7 +91,7 @@ vector* orth_step(size_t n, matrix *E, vector *f, vector *orth_poly) {
   for (size_t i = 0; i < orth_poly->size - 1; ++i) {
     poly_sum(res, vector_get(orth_poly, i));
   }
-  
+
   vector_free(&x_vec);
   return res;
 }

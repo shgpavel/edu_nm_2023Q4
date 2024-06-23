@@ -8,12 +8,10 @@
 #include "gauss.h"
 
 
-vector* linear_spline(vector *points, size_t index) {//, vector *res) {
-
-  //if (res == NULL) {
-  vector *res = (vector *)malloc(sizeof(vector));
-  vector_init(res, points->size - 1, sizeof(vector));
-  //}
+vector* linear_spline(vector *points, size_t index, vector *res) {
+  if (res == NULL || index > points->size - 2) {
+    return NULL;
+  }
   
   matrix A;
   matrix_init(&A, 2, 2, sizeof(double));
@@ -23,7 +21,7 @@ vector* linear_spline(vector *points, size_t index) {//, vector *res) {
   vector_init(&b, 2, sizeof(double));
   vector_fill_smth(&b, 0.0);
   
-  for (size_t i = index; i <= index + 1; ++i) {
+  for (size_t i = index; i < index + 1; ++i) {
     matrix_val(&A, 0, 0) = pair_get(points, i).a;
     matrix_val(&A, 1, 0) = pair_get(points, i + 1).a;
 
