@@ -2,7 +2,7 @@
     Work in progress
 
 ## Status:
-    Pre-release
+    Pre-release (new interface not tested)
 
 ## Contains:
     src/methods/gauss.c             -- solving SLAE

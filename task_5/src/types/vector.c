@@ -107,7 +107,7 @@ void vector_delete(vector *v, size_t index) {
 
 void vector_free(vector *v) {
   for (size_t i = 0; i < v->size; ++i) {
-    if (v->data[i]) free(v->data[i]);
+    free(v->data[i]);
   }
 
   v->size = 0;

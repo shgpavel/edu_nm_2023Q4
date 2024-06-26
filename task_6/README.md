@@ -1,11 +1,10 @@
 ## Overview:
     First method may be a bit faster than
-	optimized version (orth poly).
-	I do not see more easy and efficient way to code
-	second method so if you have any ideas please contact.
+	optimized version, so probably it's better
+	to just use LSM transpose and solve
 
 ## Status:
-    Released
+    Released (commiting about issues)
 
 ## Contains:
 	src/draw/draw.c           -- using curl to send funcs to the server

@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Wextra -O3 -std=c2x $(CFLAGS)
+CFLAGS := -Wall -Wextra -O1 -std=c2x $(CFLAGS)
 LDFLAGS := -lm -ljemalloc -lcurl $(LDFLAGS)
 
 CC = clang

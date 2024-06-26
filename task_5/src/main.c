@@ -18,299 +18,40 @@
 #include "funcs/funcs.h"
 
 #define CONTROL_POINTS 150
+#define BLUE_COLOR "\033[34m"
+#define YELLOW_COLOR "\033[33m"
+#define RESET_COLOR "\033[0m"
 
+enum errors {
+  LOADING,
+  FILE_NOT_OPEN,
+  FILE_TYPE_INVALID,
+  PARSE,
+  INVALID_INPUT,
+  POINTS_EMPTY,
+  FILE_IO_ERROR,
+  POINT_NOT_FOUND,
+  SET_INTERVAL,
+  FUNCS_EMPTY
+};
+
+struct pair_char_pointers {
+  char *a;
+  char *b;
+};
+
+struct pair_char_pointers parse_args(char *);
+void all_errors(enum errors);
 void help();
 
-size_t get_x_index(vector *points, double x) {
-  for (size_t i = 0; i < points->size - 2; ++i) {
-    if (pair_get(points, i).a <= x && x <= pair_get(points, i + 1).a) {
-      return i;
-    }
-  }
-}
-
-/* OLD INTERFACE */
-void penalty() {
-  pair segm = {1.0, 2.542};
-  FILE *matrix_csv = fopen("matrix.csv", "w");
-  FILE *newtonp_csv = fopen("newtonp.csv", "w");
-  FILE *s20_csv = fopen("s20.csv", "w");
-
-  fprintf(matrix_csv, "n, m, RM, RMopt\n");
-  fprintf(newtonp_csv, "n, m, RND, RNDopt\n");
-  fprintf(s20_csv, "n, m, RS20, RS20opt\n");
-
-  str_func("cot(x) - x");
-  str_func("x = 1");
-  str_func("x = 2.542");
-  
-  for (size_t s = 5; s <= 50; ++s) {
-    vector points;
-    vector_init(&points, s, sizeof(pair));
-    for (size_t i = 0; i < s; ++i) {
-      double point = segm.a 
-        + (double)i * ((segm.b - segm.a) / (double)(s - 1));
-      pair point_p = {point, func(point)};
-      vector_push(&points, (void *)&point_p);
-    }
-
-    vector *res_m = lagr_slae(&points);
-    vector *res_n = newton_poly_dd(&points);
-
-    vector *res_s20 = (vector *)malloc(sizeof(vector));
-    vector_init(res_s20, points.size - 1, sizeof(vector));
-    for (size_t i = 0; i < points.size - 2; i += 2) {
-      res_s20 = linear_spline(&points, i, res_s20);
-    }
-            
-    vector opt_points;
-    vector_init(&opt_points, s, sizeof(pair));
-    for (size_t i = 0; i < s; ++i) {
-      double point = opt_point(segm, i, s);
-      pair point_p = {point, func(point)};
-      vector_push(&opt_points, (void *)&point_p);
-    }
-    vector *res_mo = lagr_slae(&opt_points);
-    vector *res_no = newton_poly_dd(&opt_points);
-
-    vector *res_s20_o = (vector *)malloc(sizeof(vector));
-    vector_init(res_s20_o, opt_points.size - 1, sizeof(vector));
-    for (size_t i = 0; i < opt_points.size - 2; i += 2) {
-      res_s20_o = linear_spline(&opt_points, i, res_s20_o);
-    }
-    
-    double x = segm.a;
-    double add = (segm.b - segm.a) / CONTROL_POINTS;
-    double RM = 0, RN = 0, RS2 = 0, RMO = 0, RNO = 0, RS2O = 0;
-    for (size_t i = 0; i < CONTROL_POINTS; ++i, x += add) {
-      double diff_m = fabs(func(x) - poly_val(res_m, x));
-      double diff_n = fabs(func(x) - poly_val(res_n, x));
-      double diff_mo = fabs(func(x) - poly_val(res_mo, x));
-      double diff_no = fabs(func(x) - poly_val(res_no, x));
-      
-      size_t index = get_x_index(&points, x);
-      size_t index_o = get_x_index(&opt_points, x);
-         
-      double diff_s20 = 0, diff_s20_o = 0;
-      if (index < res_s20->size) diff_s20 = fabs(func(x) - poly_val(vector_get(res_s20, index), x));
-      if (index_o < res_s20_o->size) diff_s20_o = fabs(func(x) - poly_val(vector_get(res_s20_o, index_o), x));
-
-      RM = diff_m > RM ? diff_m : RM;
-      RN = diff_n > RN ? diff_n : RN;
-      RMO = diff_mo > RMO ? diff_mo : RMO;
-      RNO = diff_no > RNO ? diff_no : RNO;
-
-      RS2 = diff_s20 > RS2 ? diff_s20 : RS2;
-      RS2O = diff_s20_o > RS2O ? diff_s20_o : RS2O;
-    }
-
-    fprintf(matrix_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RM, RMO);
-    fprintf(newtonp_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RN, RNO);
-
-    fprintf(s20_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RS2, RS2O);
-
-    
-    //add_spline_func(res_s20, &points);
-    
-    vector_free(res_m);
-    vector_free(res_n);
-    vector_free(res_mo);
-    vector_free(res_no);
-    
-    vector_free(res_s20);
-    vector_free(res_s20_o);
-
-    vector_free(&points);
-    vector_free(&opt_points);
-    
-    free(res_m);
-    free(res_n);
-    free(res_mo);
-    free(res_no);
-
-    free(res_s20);
-    free(res_s20_o);
-  }
-  //plot(1);
-  //clear_plot();
-}
-
-int old_main(void) {
-  //penalty();
-  
-  pair segm = {1.0, 2.542};
-
-  FILE *lagr_csv = fopen("lagr.csv", "w");
-  FILE *newt_csv = fopen("newton.csv", "w");
-  FILE *lin_csv = fopen("lin.csv", "w");
-  FILE *quad_csv = fopen("quad.csv", "w");
-  FILE *qube_csv = fopen("qube.csv", "w");
-
-  if (!lagr_csv) return -1;
-  if (!newt_csv) return -1;
-  if (!lin_csv) return -1;
-  if (!quad_csv) return -1;
-  if (!qube_csv) return -1;
-  
-  fprintf(lagr_csv, "n, m, RL, RLopt\n");
-  fprintf(newt_csv, "n, m, RN, RNopt\n");
-  fprintf(lin_csv, "n, m, RS10, RS10opt\n");
-  fprintf(quad_csv, "n, m, RS21, RS21opt\n");
-  fprintf(qube_csv, "n, m, RS32, RS32opt\n");
-
-  //str_func("cot(x) - x");
-  //str_func("x = 1");
-  //str_func("x = 2.542");
-
-  for (size_t s = 5; s <= 50; ++s) {
-    vector points;
-    vector_init(&points, s, sizeof(pair));
-    for (size_t i = 0; i < s; ++i) {
-      double point = segm.a 
-        + (double)i * ((segm.b - segm.a) / (double)(s - 1));
-      pair point_p = {point, func(point)};
-      vector_push(&points, (void *)&point_p);
-    }
-
-    vector *res_l = lagrange_poly(&points);
-    vector *res_n = newton_poly(&points);
-
-    vector *res_lin = (vector *)malloc(sizeof(vector));
-    vector_init(res_lin, points.size - 1, sizeof(vector));
-    for (size_t i = 0; i < points.size - 1; ++i) {
-      res_lin = linear_spline(&points, i, res_lin);
-    }
-
-    
-    vector *res_quad = (vector *)malloc(sizeof(vector));
-    vector_init(res_quad, s - 1, sizeof(vector));
-    for (size_t i = 0; i < points.size - 2; i += 2) {
-      res_quad = quad_spline(&points, i, res_quad);
-    }
-    
-    vector *res_qube = (vector *)malloc(sizeof(vector));
-    vector_init(res_qube, s - 1, sizeof(vector));
-    for (size_t i = 0; i < points.size - 3; i += 3) {
-      res_qube = qube_spline(&points, i, res_qube);
-    }    
-        
-    vector opt_points;
-    vector_init(&opt_points, s, sizeof(pair));
-    for (size_t i = 0; i < s; ++i) {
-      double point = opt_point(segm, i, s);
-      pair point_p = {point, func(point)};
-      vector_push(&opt_points, (void *)&point_p);
-    }
-    vector *res_lo = lagrange_poly(&opt_points);
-    vector *res_no = newton_poly(&opt_points);
-
-    vector *res_lin_o = (vector *)malloc(sizeof(vector));
-    vector_init(res_lin_o, s - 1, sizeof(vector));
-    for (size_t i = 0; i < opt_points.size - 1; ++i) {
-      res_lin_o = linear_spline(&opt_points, i, res_lin_o);
-    }
-    
-    vector *res_quad_o = (vector *)malloc(sizeof(vector));
-    vector_init(res_quad_o, s - 1, sizeof(vector));
-    for (size_t i = 0; i < opt_points.size - 2; i += 2) {
-      res_quad_o = quad_spline(&opt_points, i, res_quad_o);
-    }
-    
-    vector *res_qube_o = (vector *)malloc(sizeof(vector));
-    vector_init(res_qube_o, s - 1, sizeof(vector));
-    for (size_t i = 0; i < opt_points.size - 3; i += 3) {
-      res_qube_o = qube_spline(&opt_points, i, res_qube_o);
-    }
-    
-    double x = segm.a;
-    double add = (segm.b - segm.a) / CONTROL_POINTS;
-    double RL = 0, RN = 0, RLO = 0,
-      RNO = 0, RS1 = 0, RS2 = 0, RS3 = 0,
-      RS1O = 0, RS2O = 0, RS3O = 0;
-    for (size_t i = 0; i < CONTROL_POINTS; ++i, x += add) {
-      double diff_l = fabs(func(x) - poly_val(res_l, x));
-      double diff_n = fabs(func(x) - poly_val(res_n, x));
-      double diff_lo = fabs(func(x) - poly_val(res_lo, x));
-      double diff_no = fabs(func(x) - poly_val(res_no, x));
-
-      
-      size_t index = get_x_index(&points, x);
-      size_t index_o = get_x_index(&opt_points, x);
-         
-      double diff_lin = 0, diff_quad = 0, diff_qube = 0, diff_lin_o = 0, diff_quad_o = 0, diff_qube_o = 0;
-      if (index < res_lin->size) diff_lin = fabs(func(x) - poly_val(vector_get(res_lin, index), x));
-      if (index < res_quad->size) diff_quad = fabs(func(x) - poly_val(vector_get(res_quad, index), x));
-      if (index < res_qube->size) diff_qube = fabs(func(x) - poly_val(vector_get(res_qube, index), x));
-
-      if (index_o < res_lin_o->size) diff_lin_o = fabs(func(x) - poly_val(vector_get(res_lin_o, index_o), x));
-      if (index_o < res_quad_o->size)  diff_quad_o = fabs(func(x) - poly_val(vector_get(res_quad_o, index_o), x));
-      if (index_o < res_qube_o->size)  diff_qube_o = fabs(func(x) - poly_val(vector_get(res_qube_o, index_o), x));
-      
-      RL = diff_l > RL ? diff_l : RL;
-      RN = diff_n > RN ? diff_n : RN;
-      RLO = diff_lo > RLO ? diff_lo : RLO;
-      RNO = diff_no > RNO ? diff_no : RNO;
-
-      RS1 = diff_lin > RS1 ? diff_lin : RS1;
-      RS2 = diff_quad > RS2 ? diff_quad : RS2;
-      RS3 = diff_qube > RS3 ? diff_qube : RS3;
-
-      RS1O = diff_lin_o > RS1O ? diff_lin_o : RS1O;
-      RS2O = diff_quad_o > RS2O ? diff_quad_o : RS2O;
-      RS3O = diff_qube_o > RS3O ? diff_qube_o : RS3O;
-    }
-
-    fprintf(lagr_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RL, RLO);
-    fprintf(newt_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RN, RNO);
-
-    fprintf(lin_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RS1, RS1O);
-    fprintf(quad_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RS2, RS2O);
-    fprintf(qube_csv, "%zu, %d, %lg, %lg\n", s, CONTROL_POINTS, RS3, RS3O);
-
-    
-    //if (s % 3 == 0) add_func(res_l);
-    //if (s % 3 == 0) add_func(res_lo);
-    //if (s % 3 == 0) add_func(res_n);
-    //if (s % 3 == 0) add_func(res_no);
-
-    vector_free(res_l);
-    vector_free(res_n);
-    vector_free(res_lo);
-    vector_free(res_no);
-    
-    vector_free(res_lin);
-    vector_free(res_lin_o);
-    vector_free(res_quad);
-    vector_free(res_quad_o);
-    vector_free(res_qube);
-    vector_free(res_qube_o);
-
-    vector_free(&points);
-    vector_free(&opt_points);
-    
-    free(res_l);
-    free(res_n);
-    free(res_lo);
-    free(res_no);
-
-    free(res_lin);
-    free(res_lin_o);
-    free(res_quad);
-    free(res_quad_o);
-    free(res_qube);
-    free(res_qube_o);
-  }
-
-  //plot(0);
-  clear_plot();    
-  
-  return 0;
-}
-
-/* NEW INTERFACE */
 int main(void) {
   char *input = NULL;
-  size_t len = 0;
+  size_t
+    len = 0,
+    p_allocated = 0,
+    f_allocated = 0,
+    interval_set = 0;
+  pair segm;
   FILE *points_file;
   FILE *funcs_file;
   vector points;
@@ -319,97 +60,497 @@ int main(void) {
   while (1) {
     printf(">> ");
     getline(&input, &len, stdin);
-
+    
     if (strstr(input, "load")) {
 
       size_t flag = 0;
-      if (strstr(input, "points")) {
+      if (strstr(input, "point")) {
         flag = 1;
-      } else if (strstr(input, "funcs")) {
+      } else if (strstr(input, "func")) {
         flag = 2;
       } else {
-        printf("Error: load what?\n");
+        all_errors(LOADING);
+        continue;
       }
       
-      char *token = strtok(input, " ");
-
-      for (size_t i = 0; i < 3; ++i) {
-        if (i == 2) break;
-        token = strtok(NULL, " ");
-      }
-      
-      if (token[strlen(token) - 1] == '\n') {
-        token[strlen(token) - 1] = '\0';
-      }
-
+      struct pair_char_pointers
+        token = parse_args(input);
       if (flag == 1) {
-        points_file = fopen(token, "r");
+        points_file = fopen(token.a, "r");
         if (points_file == NULL) {
-          printf("Error: Could not open such file\n");
-          return -1;
+          all_errors(FILE_NOT_OPEN);
+          continue;
         }
-        size_t sz;
-        fscanf(points_file, "%zu", &sz);
+        if (p_allocated) {
+          vector_free(&points);
+          p_allocated = 0;
+        }
+        
+        size_t sz; int comp_file;
+        comp_file = fscanf(points_file, "%zu", &sz);
+        if (comp_file != 1) {
+          all_errors(FILE_TYPE_INVALID);
+          continue;
+        }
         vector_init(&points, sz, sizeof(pair));
+        p_allocated = 1;
         
         for (size_t i = 0; i < sz; ++i) {
           pair pushed;
-          fscanf(points_file, "%lf", &pushed.a);
+          comp_file = fscanf(points_file, "%lf", &pushed.a);
+          if (comp_file != 1) {
+            all_errors(FILE_TYPE_INVALID);
+            break;
+          }
           vector_push(&points, &pushed);
         }
 
         for (size_t i = 0; i < sz; ++i) {
-          fscanf(points_file, "%lf", &(pair_get(&points, i)).b);
+          comp_file = fscanf(points_file, "%lf", &(pair_get(&points, i)).b);
+          if (comp_file != 1) {
+            all_errors(FILE_TYPE_INVALID);
+            continue;
+          }
         }
         vector_print_pairs(&points);
+        fclose(points_file);
       } else if (flag == 2) {
-        funcs_file = fopen(token, "r");
+        funcs_file = fopen(token.a, "r");
         if (funcs_file == NULL) {
-          printf("Error: Could not open such file\n");
-          return -1;
+          all_errors(FILE_NOT_OPEN);
+          continue;
         }
-        size_t sz;
-        fscanf(funcs_file, "%zu", &sz);
-        vector_init(&funcs, sz, sizeof(vector));
+        if (f_allocated) {
+          for (size_t i = 0; i < funcs.size; ++i) {
+            vector_free(vector_get(&funcs, i));
+            free(vector_get(&funcs, i));
+          }
+          f_allocated = 0;
+        }
         
+        size_t sz; int comp_file;
+        comp_file = fscanf(funcs_file, "%zu", &sz);
+        if (comp_file == 1) {
+          vector_init(&funcs, sz, sizeof(vector));
+          f_allocated = 1;
+        } else {
+          all_errors(FILE_TYPE_INVALID);
+          continue;
+        }
+
+        for (size_t i = 0; i < sz; ++i) {
+          vector to_push;
+        }
       }
     }
 
-    if (strstr(input, "exit")) break;
-    else help();
-  }
+    else if (strstr(input, "save")) {
+      size_t flag = 0;
+      if (strstr(input, "point")) {
+        flag = 1;
+      } else if (strstr(input, "func")) {
+        flag = 2;
+      } else {
+        all_errors(LOADING);
+        continue;
+      }
 
-  vector_free(&points);
-  vector_free(&funcs);
+      struct pair_char_pointers
+        token = parse_args(input);
+      if (flag == 1) {
+        points_file = fopen(token.a, "w");
+        if (points_file == NULL) {
+          all_errors(FILE_NOT_OPEN);
+          continue;
+        }
+        if (!p_allocated) {
+          all_errors(POINTS_EMPTY);
+          continue;
+        }
+        
+        int comp_file = fprintf(points_file, "%zu\n", points.size);
+        if (comp_file < 0) {
+          all_errors(FILE_IO_ERROR);
+          continue;
+        }
+
+        size_t flag = 0;
+        for (size_t i = 0; i < points.size; ++i) {
+          double to_push;
+          if (flag == 0) {
+            to_push = pair_get(&points, i).a;
+          } else {
+            to_push = pair_get(&points, i).b;
+          }
+          
+          if (i != points.size - 1) {
+            comp_file = fprintf(points_file, "%lg ", to_push);
+          } else {
+            comp_file = fprintf(points_file, "%lg\n", to_push);
+          }
+          
+          if (comp_file < 1) {
+            all_errors(FILE_IO_ERROR);
+            break;
+          }
+          
+          if (i == points.size - 1 && flag == 0) {
+            flag = 1;
+            i = -1;
+          }
+        }
+        fclose(points_file);
+      }
+    }
+    
+    else if (strstr(input, "set interval") ||
+             strstr(input, "add point") ||
+             strstr(input, "remove point")) {
+      size_t flag = 0;
+      if (strstr(input, "set interval")) {
+        flag = 1;
+      } else if (strstr(input, "add point")) {
+        flag = 2;
+      } else if (strstr(input, "remove point")) {
+        flag = 3;
+      }
+      
+      double *to_push_x, *to_push_y;
+      pair some;
+      struct pair_char_pointers
+        token = parse_args(input);
+
+      if (flag == 1) {
+        to_push_x = &segm.a;
+        to_push_y = &segm.b;
+      } else {
+        to_push_x = &some.a;
+        to_push_y = &some.b;
+      }
+      
+      int comp_input = sscanf(token.a, "%lf", to_push_x);
+      if (comp_input != 1) {
+        all_errors(PARSE);
+        continue;
+      }
+      if (token.b != NULL && *token.b != '\0') {
+        token.a = strtok_r(NULL, " ", &token.b);
+      } else {
+        all_errors(PARSE);
+        continue;
+      }
+      comp_input = sscanf(token.a, "%lf", to_push_y);
+      if (comp_input != 1) {
+        all_errors(PARSE);
+        continue;
+      }
+
+      if (flag == 1) {
+        printf("Log: Interval %lg %lg\n", segm.a, segm.b);
+        interval_set = 1;
+      } else if (flag == 2) {
+        if (!p_allocated) {
+          vector_init(&points, 1, sizeof(pair));;
+        }
+        vector_push(&points, &some);
+        printf("Log: Added x = %lg y = %lg\n", some.a, some.b);
+      } else if (flag == 3) {
+        const double tol = 1e-10;
+        size_t is_found = 0;
+        for (size_t i = 0; i < points.size; ++i) {
+          if (fabs(pair_get(&points, i).a - some.a) < tol
+              && fabs(pair_get(&points, i).b - some.b) < tol) {
+            vector_delete(&points, i);
+            is_found = 1;
+            printf("Log: Deleted x = %lg y = %lg\n", some.a, some.b);
+          }
+        }
+        if (!is_found) {
+          all_errors(POINT_NOT_FOUND);
+          continue;
+        }
+      }
+    }
+
+    else if (strstr(input, "linspace points")
+             || strstr(input, "optimal points")) {
+      size_t flag = 0;
+      if (strstr(input, "optimal points")) flag = 1;
+
+      size_t num_of_points;
+      struct pair_char_pointers
+        token = parse_args(input);
+      
+      int comp_input = sscanf(token.a, "%zu", &num_of_points);
+      if (comp_input != 1) {
+        all_errors(PARSE);
+        continue;
+      }
+
+      if (!interval_set) {
+        all_errors(SET_INTERVAL);
+        continue;
+      }
+      
+      if (!p_allocated) {
+        vector_init(&points, num_of_points, sizeof(pair));
+        p_allocated = 1;
+      }
+
+      if (flag) {
+        for (size_t i = 0; i < num_of_points; ++i) {
+          double point = opt_point(segm, i, num_of_points);
+          pair to_push = {point, func(point)};
+          vector_push(&points, &to_push);
+        }
+      } else {
+        for (size_t i = 0; i < num_of_points; ++i) {
+          double point = segm.a + (double)i
+            * ((segm.b - segm.a) / (double)(num_of_points - 1));
+          pair to_push = {point, func(point)};
+          vector_push(&points, &to_push);
+        }
+      }
+      
+      printf("Log: Added %zu points between %lg %lg\n",
+             num_of_points, segm.a, segm.b);
+    }
+    
+    else if (strstr(input, "print")) {
+      if (strstr(input, "point")) {
+        vector_print_pairs(&points);
+      } else if (strstr(input, "func")) {
+        if (f_allocated) {
+          for (size_t i = 0; i < funcs.size; ++i) {
+            vector_print(vector_get(&funcs, i));
+          }
+        }
+      } else {
+        all_errors(LOADING);
+        continue;
+      }
+    }
+
+    else if (strstr(input, "plot")) {      
+      if (!f_allocated) {
+        all_errors(FUNCS_EMPTY);
+        continue;
+      }
+      if (!p_allocated) {
+        all_errors(POINTS_EMPTY);
+        continue;
+      }
+
+      if (!strstr(input, "spline")) {
+        for (size_t i = 0; i < funcs.size; ++i) {
+          add_func(&funcs);
+        }
+        plot(0);
+      } else {
+        for (size_t i = 0; i < funcs.size; ++i) {
+          add_spline_func(&funcs, &points);
+        }
+        plot(1);
+      }
+    }
+
+    else if (strstr(input, "clear")) {
+      if (strstr(input, "point")) {
+        if (!p_allocated) {
+          all_errors(POINTS_EMPTY);
+          continue;
+        }
+        vector_free(&points);
+        p_allocated = 0;
+      } else if (strstr(input, "func")) {
+        if (!f_allocated) {
+          all_errors(FUNCS_EMPTY);
+          continue;
+        }
+        for (size_t i = 0; i < funcs.size; ++i) {
+          vector_free(vector_get(&funcs, i));
+          free(vector_get(&funcs, i));
+        }
+        f_allocated = 0;
+      } else if (strstr(input, "plot")) {
+        clear_plot();
+      }
+    }
+
+    else if (strstr(input, "lagr")
+             || strstr(input, "newton")) {
+
+      size_t flag = 0;
+      if (strstr(input, "newton")) flag = 1;
+      if (strstr(input, "newton2")) flag = 2;
+
+      if (!p_allocated) {
+        all_errors(POINTS_EMPTY);
+        continue;
+      }
+      vector *res;
+      switch (flag) {
+        case 0:
+          res = lagrange_poly(&points);
+          break;
+        case 1:
+          res = newton_poly(&points);
+          break;
+        case 2:
+          res = newton_poly_dd(&points);
+          break;
+      }
+      if (!f_allocated) {
+        vector_init(&funcs, 1, sizeof(vector));
+        f_allocated = 1;
+      }
+      vector_push(&funcs, res);
+    }
+
+    else if (strstr(input, "linear")
+             || strstr(input, "quad")
+             || strstr(input, "qube")
+             || strstr(input, "spline")
+             || strstr(input, "slae")) {
+      size_t flag = 0;
+      if (strstr(input, "quad")) flag = 1;
+      else if (strstr(input, "qube")) flag = 2;
+      else if (strstr(input, "spline")) flag = 3;
+      else if (strstr(input, "slae")) flag = 4;
+      
+      if (!p_allocated) {
+        all_errors(POINTS_EMPTY);
+        continue;
+      }
+
+      if (!interval_set) {
+        all_errors(SET_INTERVAL);
+        continue;
+      }
+      
+      vector *res = (vector *)malloc(sizeof(vector));
+      vector_init(res, points.size - 1, sizeof(vector));
+      switch (flag) {
+        case 0:
+          res = linear_spline(&points, points.size - 1, res);
+          break;
+        case 1:
+          res = quad_spline(&points, points.size - 1, res);
+          break;
+        case 2:
+          res = qube_spline(&points, points.size - 1, res);
+          break;
+        case 3:
+          res = spline_2_0(&points, points.size - 1, res);
+          break;
+        case 4:
+          res = lagr_slae(&points);
+          break;
+      }
+      if (!f_allocated) {
+        vector_init(&funcs, 1, sizeof(vector));
+        f_allocated = 1;
+      }
+      vector_push(&funcs, res);
+    }
+    
+    else if (strstr(input, "exit")) break;
+    else if (strstr(input, "help")) help();
+    else all_errors(INVALID_INPUT);
+  }
+  if (p_allocated) vector_free(&points);
+  if (f_allocated) vector_free(&funcs);
   free(input);
   return 0;
+}
+
+struct pair_char_pointers parse_args(char *input) {
+  char *token, *next_token;
+  token = strtok_r(input, " ", &next_token);
+  for (size_t i = 0; i < 3; ++i) {
+    if (i == 2) break;
+    
+    if (next_token != NULL && *next_token != '\0') {
+      token = strtok_r(NULL, " ", &next_token);
+    } else break;
+  }
+
+  if (token[strlen(token) - 1] == '\n') {
+    token[strlen(token) - 1] = '\0';
+  }
+  struct pair_char_pointers result = {token, next_token};
+  return result;
+} 
+
+void all_errors(enum errors error) {
+  printf(YELLOW_COLOR
+         "Error:"
+         RESET_COLOR);
+  switch(error) {
+    case LOADING:
+      printf(" Loading type not specified\n");
+      break;
+    case FILE_NOT_OPEN:
+      printf(" Could not open such file\n");
+      break;
+    case FILE_TYPE_INVALID:
+      printf(" Incompatible file type\n");
+      break;
+    case PARSE:
+      printf(" Could not parse your input. Please try again\n");
+      break;
+    case INVALID_INPUT:
+      printf(" Invalid input. Please type"
+             BLUE_COLOR " help " RESET_COLOR
+             "to see available commands\n");
+      break;
+    case POINTS_EMPTY:
+      printf(" Could not save points, vector is empty\n");
+      break;
+    case FILE_IO_ERROR: 
+      printf(" Something went wrong during IO operation."
+             " Please check if everything ok with FS\n");
+      break;
+    case POINT_NOT_FOUND:
+      printf(" Could not find such point\n");
+      break;
+    case SET_INTERVAL:
+      printf(" Please set interval first\n");
+      break;
+    case FUNCS_EMPTY: 
+      printf(" Could not draw empty funcs set\n");
+      break;
+  }
 }
 
 void help() {
   printf("\t\tInterpolation tool\t0.1\n"
          "  Usage:\n"
-         "\thelp                    -- prints this message\n\n"
-         "\tload points <filename>  -- load points from file\n"
-         "\tsave points <filename>  -- save points to a file\n"
-         "\tload funcs  <filename>  -- load functions from file\n"
-         "\tsave funcs <filename>   -- save functions to a file\n\n"
-         "\tset interval            -- set [a, b] segment of interpolation\n"
-         "\tlinspace points         -- fill points with equidistant points from interval\n"
-         "\toptimal points          -- fill points with optimal points\n"
-         "\tadd point               -- add some point\n"
-         "\tremove point            -- delete some point\n"
-         "\tprint points            -- print current points\n\n"
-         "\tprint funcs             -- print current functions\n"
-         "\tplot                    -- get graphs\n"
-         "\tplot splines            -- get graphs for piecewise-defined functions\n"
-         "\texit                    -- terminate\n\n"
-         "\tlagr                    -- lagrange interpolation\n"
-         "\tnewton                  -- newton interpolation\n"
-         "\tlinear                  -- linear spline interpolation\n"
-         "\tquad                    -- quad splines 2 1\n"
-         "\tqube                    -- qube splines 3 2\n\n"
-         "\tslae                    -- slae classic vander matrix interpolation\n"
-         "\tnewton2                 -- another version for newton interpolation\n"
-         "\tspline20                -- quad spline С^0 functions\n"
+         "\thelp                       -- prints this message\n\n"
+         "\tload points <filename>     -- load points from file\n"
+         "\tsave points <filename>     -- save points to a file\n"
+         "\tload funcs  <filename>     -- load functions from file\n"
+         "\tsave funcs <filename>      -- save functions to a file\n\n"
+         "\tset interval <a> <b>       -- set [a, b] segment of interpolation\n"
+         "\tlinspace points <quantity> -- fill points with equidistant points\n"
+         "\toptimal points <quantity>  -- fill points with optimal points\n"
+         "\tadd point <x> <y>          -- add some point\n"
+         "\tremove point <x> <y>       -- delete some point\n"
+         "\tprint points               -- print current points\n\n"
+         "\tprint funcs                -- print current functions\n"
+         "\tplot                       -- get graphs\n"
+         "\tplot splines               -- get graphs for piecewise-defined functions\n"
+         "\tclear points               -- clears all points\n"
+         "\tclear funcs                -- clears all functions\n"
+         "\tclear plot                 -- clears everything on desmos plot\n"
+         "\texit                       -- terminate\n\n"
+         "\tlagr                       -- lagrange interpolation\n"
+         "\tnewton                     -- newton interpolation\n"
+         "\tlinear                     -- linear spline interpolation\n"
+         "\tquad                       -- quad splines 2 1\n"
+         "\tqube                       -- qube splines 3 2\n\n"
+         "\tslae                       -- slae classic vander matrix interpolation\n"
+         "\tnewton2                    -- another version for newton interpolation\n"
+         "\tspline20                   -- quad spline С^0 functions\n"
          );
 }

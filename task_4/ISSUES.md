@@ -1,2 +1,2 @@
 ## TODO:
-	1. inverse power method
+	1. inverse power method refactor
