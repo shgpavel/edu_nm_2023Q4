@@ -7,22 +7,25 @@ app.use(express.json());
 let functionsList = [];
 
 app.post('/add-function', (req, res) => {
-    const { latex } = req.body;
-		functionsList.push(latex);
-    res.json({ status: "success" });
+  const {latex} = req.body;
+  functionsList.push(latex);
+  res.json({status: 'success'});
 });
 
 app.post('/clear-functions', (req, res) => {
-    functionsList = [];
-    res.json({ status: "success" });
+  functionsList = [];
+  res.json({status: 'success'});
 });
 
 app.get('/plot', (req, res) => {
-    const calculatorScript = functionsList.map(latex => 
-        `calculator.setExpression({latex: '${latex.replace(/'/g, "\\'")}'});`
-    ).join('\n');
+  const calculatorScript =
+      functionsList
+          .map(
+              latex => `calculator.setExpression({latex: '${
+                  latex.replace(/'/g, '\\\'')}'});`)
+          .join('\n');
 
-    const responseHtml = `
+  const responseHtml = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -38,9 +41,9 @@ app.get('/plot', (req, res) => {
 </body>
 </html>
     `;
-    res.send(responseHtml);
+  res.send(responseHtml);
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

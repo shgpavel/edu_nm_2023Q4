@@ -1,8 +1,8 @@
 ## Overview:
-    Work in progress
+    Check ISSUES.md
 
 ## Status:
-    Pre-release (new interface not tested)
+    Released w bugs
 
 ## Contains:
     src/methods/gauss.c             -- solving SLAE

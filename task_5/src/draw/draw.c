@@ -1,7 +1,7 @@
+#include <curl/curl.h>
+#include <jemalloc/jemalloc.h>
 #include <stdio.h>
 #include <string.h>
-#include <jemalloc/jemalloc.h>
-#include <curl/curl.h>
 
 #include "../common.h"
 #include "../types/pair.h"
@@ -14,7 +14,8 @@ struct memory_struct {
   char *memory;
 };
 
-static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+static size_t write_callback(void *contents, size_t size, size_t nmemb,
+                             void *userp) {
   size_t realsize = size * nmemb;
   struct memory_struct *mem = (struct memory_struct *)userp;
 
@@ -52,8 +53,7 @@ char *go_str(vector *target) {
 
   char buffer[50];
   for (size_t i = 0; i < target->size; ++i) {
-    if (vector_val(target, i) > 1e+6 ||
-        vector_val(target, i) < 1e-4) {
+    if (vector_val(target, i) > 1e+6 || vector_val(target, i) < 1e-4) {
       format_exp(buffer, vector_val(target, i));
       sprintf(ptr, "%sx^{%zu}", buffer, i);
       memset(buffer, '\0', 50);
@@ -66,7 +66,7 @@ char *go_str(vector *target) {
       ++ptr;
     }
   }
-  return equation; 
+  return equation;
 }
 
 void str_func(char *p) {
@@ -77,7 +77,7 @@ void str_func(char *p) {
   sprintf(postfields, "{\"latex\": \"%s\"}", p);
 
   curl = curl_easy_init();
-  
+
   if (curl) {
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -87,10 +87,10 @@ void str_func(char *p) {
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
     res = curl_easy_perform(curl);
-    
+
     if (res != CURLE_OK) {
-      fprintf(stderr, "Error: curl_easy_perform() failed: %s\n", 
-          curl_easy_strerror(res));
+      fprintf(stderr, "Error: curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
     }
     curl_easy_cleanup(curl);
     curl_slist_free_all(headers);
@@ -114,8 +114,7 @@ void add_spline_func(vector *target, vector *points) {
     char *res_str = malloc(str_limit);
     char *p = go_str(vector_get(target, i));
     char limits[50];
-    sprintf(limits, "{%lg <= x <= %lg:",
-            pair_get(points, i).a,
+    sprintf(limits, "{%lg <= x <= %lg:", pair_get(points, i).a,
             pair_get(points, i + 1).a);
     strcpy(res_str, limits);
     strcat(res_str, p);
@@ -139,8 +138,9 @@ void plot(size_t spline_flag) {
   if (curl) {
     if (spline_flag == 1) {
       curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/plot-splines");
-    } else curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/plot");
-    
+    } else
+      curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/plot");
+
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
 
@@ -172,16 +172,17 @@ void clear_plot() {
   CURL *curl;
   CURLcode res;
   char postfields[0];
-  
+
   curl = curl_easy_init();
   if (curl) {
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "Content-Type: application/json");
-    curl_easy_setopt(curl, CURLOPT_URL, "http://localhost:3000/clear-functions");
+    curl_easy_setopt(curl, CURLOPT_URL,
+                     "http://localhost:3000/clear-functions");
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postfields);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_POST, 1L);
-    
+
     res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {

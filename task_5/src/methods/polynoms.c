@@ -1,7 +1,7 @@
-#include <stdio.h>
 #include <complex.h>
-#include <math.h>
 #include <jemalloc/jemalloc.h>
+#include <math.h>
+#include <stdio.h>
 
 #include "../common.h"
 #include "../types/vector.h"
@@ -38,15 +38,16 @@ vector poly_mult(vector *poly_1, vector *poly_2) {
     n *= 2;
   }
 
-  complex double *fft_poly_1 = (complex double *) calloc(n, sizeof(complex double));
-  complex double *fft_poly_2 = (complex double *) calloc(n, sizeof(complex double));
+  complex double *fft_poly_1 =
+      (complex double *)calloc(n, sizeof(complex double));
+  complex double *fft_poly_2 =
+      (complex double *)calloc(n, sizeof(complex double));
   for (size_t i = 0; i < poly_1->size; ++i) {
     fft_poly_1[i] = vector_val(poly_1, i);
   }
   for (size_t i = 0; i < poly_2->size; ++i) {
     fft_poly_2[i] = vector_val(poly_2, i);
   }
-
 
   fft(fft_poly_1, n, 0);
   fft(fft_poly_2, n, 0);

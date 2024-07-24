@@ -1,16 +1,15 @@
-#include <stdio.h>
-#include <math.h>
 #include <jemalloc/jemalloc.h>
+#include <math.h>
+#include <stdio.h>
 
-#include "polynoms.h"
 #include "../common.h"
 #include "../funcs/funcs.h"
 #include "../types/pair.h"
 #include "../types/vector.h"
+#include "polynoms.h"
 
-
-vector* newton_poly(vector *points) {
-  vector *res = (vector*)malloc(sizeof(vector));
+vector *newton_poly(vector *points) {
+  vector *res = (vector *)malloc(sizeof(vector));
   vector_init(res, points->size, sizeof(double));
 
   vector xpolres;
@@ -35,7 +34,7 @@ vector* newton_poly(vector *points) {
       }
       f += g * pair_get(points, i).b;
     }
-    
+
     for (size_t i = 0; i < k; ++i) {
       vector_val(&xminus, 0) = -(pair_get(points, i).a);
       if (i != 0) {
@@ -53,10 +52,10 @@ vector* newton_poly(vector *points) {
   vector_val(&xminus, 0) = pair_get(points, 0).b;
   vector_val(&xminus, 1) = 0;
   poly_sum(res, &xminus);
-  
+
   vector_free(&xminus);
   vector_free(&xpolres);
-  
+
   return res;
 }
 

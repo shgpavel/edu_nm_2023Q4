@@ -14,10 +14,10 @@ void test() {
     scanf("%lf", &(pair_get(&points, i)).b);
   }
   vector_print_pairs(&points);
-  
+
   vector *res = lagr_slae(&points);
   vector_print(res);
-  
+
   vector_free(res);
   free(res);
 }
@@ -46,18 +46,18 @@ void test_spline() {
   for (size_t i = 0; i < points.size - 1; ++i) {
     res = linear_spline(&points, i, res);
   }
-  
+
   for (size_t i = 0; i < points.size - 2; i += 2) {
     res = quad_spline(&points, i, res);
   }
-  
+
   for (size_t i = 0; i < points.size - 3; i += 3) {
     res = qube_spline(&points, i, res);
   }
   */
-  
+
   add_spline_func(res, &points);
-  
+
   for (size_t i = 0; i < res->size; ++i) {
     vector_print(vector_get(res, i));
     vector_free(vector_get(res, i));
@@ -66,7 +66,7 @@ void test_spline() {
 
   plot(1);
   clear_plot();
-  
+
   vector_free(res);
   free(res);
 }
@@ -85,9 +85,9 @@ void penalty_4(vector *points) {
   for (size_t i = 0; i < points.size - 2; i += 2) {
     res = spline_2_0(&points, i, res);
   }
-  
+
   add_spline_func(res, &points);
-  
+
   for (size_t i = 0; i < res->size; ++i) {
     vector_print(vector_get(res, i));
     vector_free(vector_get(res, i));
@@ -96,7 +96,7 @@ void penalty_4(vector *points) {
 
   plot(1);
   clear_plot();
-  
+
   vector_free(res);
   free(res);
 }

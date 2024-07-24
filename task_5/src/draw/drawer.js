@@ -7,28 +7,31 @@ app.use(express.json());
 let functionsList = [];
 
 app.post('/add-function', (req, res) => {
-  const { latex } = req.body;
-	functionsList.push(latex);
-  res.json({ status: "success" });
+  const {latex} = req.body;
+  functionsList.push(latex);
+  res.json({status: 'success'});
 });
 
 app.post('/clear-functions', (req, res) => {
   functionsList = [];
-  res.json({ status: "success" });
+  res.json({status: 'success'});
 });
 
 app.get('/plot-splines', (req, res) => {
-  const calculatorScript = functionsList.map(latex => {
-    const formattedLatex = `\\left\\{${latex}\\right\\}`;
-    const escapedLatex = formattedLatex.replace(/\\/g, '\\\\')
-                                       .replace(/"/g, '\\"')
-                                       .replace(/'/g, "\\'");
-    const result = `calculator.setExpression({latex: "${escapedLatex}"});`;
-    return result;
-  }).join('\n');
+  const calculatorScript =
+      functionsList
+          .map(latex => {
+            const formattedLatex = `\\left\\{${latex}\\right\\}`;
+            const escapedLatex = formattedLatex.replace(/\\/g, '\\\\')
+                                     .replace(/"/g, '\\"')
+                                     .replace(/'/g, '\\\'');
+            const result =
+                `calculator.setExpression({latex: "${escapedLatex}"});`;
+            return result;
+          })
+          .join('\n');
 
-  const responseHtml = 
-`
+  const responseHtml = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -48,11 +51,14 @@ app.get('/plot-splines', (req, res) => {
 });
 
 app.get('/plot', (req, res) => {
-    const calculatorScript = functionsList.map(latex => 
-        `calculator.setExpression({latex: '${latex.replace(/'/g, "\\'")}'});`
-    ).join('\n');
+  const calculatorScript =
+      functionsList
+          .map(
+              latex => `calculator.setExpression({latex: '${
+                  latex.replace(/'/g, '\\\'')}'});`)
+          .join('\n');
 
-    const responseHtml = `
+  const responseHtml = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -68,7 +74,7 @@ app.get('/plot', (req, res) => {
 </body>
 </html>
     `;
-    res.send(responseHtml);
+  res.send(responseHtml);
 });
 
 

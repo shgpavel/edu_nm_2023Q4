@@ -1,16 +1,15 @@
-#include <stdio.h>
-#include <math.h>
 #include <jemalloc/jemalloc.h>
+#include <math.h>
+#include <stdio.h>
 
-#include "polynoms.h"
 #include "../common.h"
+#include "../types/matrix.h"
 #include "../types/pair.h"
 #include "../types/vector.h"
-#include "../types/matrix.h"
 #include "gauss.h"
+#include "polynoms.h"
 
-
-vector* div_diff(size_t n, vector *points) {
+vector *div_diff(size_t n, vector *points) {
   vector *res = (vector *)malloc(sizeof(vector));
   vector_init(res, points->size, sizeof(double));
   vector_fill_smth(res, 0.0);
@@ -18,18 +17,17 @@ vector* div_diff(size_t n, vector *points) {
   for (size_t i = 0; i < n; ++i) {
     vector_val(res, i) = pair_get(points, i).b;
   }
-  
+
   for (size_t j = 1; j < n; ++j) {
     for (size_t i = n - 1; i >= j; --i) {
-      vector_val(res, i) =
-        (vector_val(res, i) - vector_val(res, i - 1))
-        / (pair_get(points, i).a - pair_get(points, i - j).a);
+      vector_val(res, i) = (vector_val(res, i) - vector_val(res, i - 1)) /
+                           (pair_get(points, i).a - pair_get(points, i - j).a);
     }
   }
   return res;
 }
 
-vector* newton_poly_dd(vector *points) {
+vector *newton_poly_dd(vector *points) {
   vector *res = (vector *)malloc(sizeof(vector));
   vector_init(res, points->size, sizeof(double));
 
@@ -42,7 +40,6 @@ vector* newton_poly_dd(vector *points) {
   vector_fill_smth(res, 0.0);
   vector_fill_smth(&xminus, 1.0);
 
-  
   vector *div_d = div_diff(points->size, points);
 
   for (size_t k = 0; k < points->size; ++k) {
@@ -59,11 +56,11 @@ vector* newton_poly_dd(vector *points) {
     vector_mult(&xpolres, vector_val(div_d, k));
     poly_sum(res, &xpolres);
   }
-  
+
   vector_val(&xminus, 0) = pair_get(points, 0).b;
   vector_val(&xminus, 1) = 0;
   poly_sum(res, &xminus);
-  
+
   vector_free(&xminus);
   vector_free(&xpolres);
   vector_free(div_d);
@@ -72,11 +69,11 @@ vector* newton_poly_dd(vector *points) {
   return res;
 }
 
-vector* spline_2_0(vector *points, size_t index, vector *res) {
+vector *spline_2_0(vector *points, size_t index, vector *res) {
   if (res == NULL || index > points->size - 3) {
     return NULL;
   }
-    
+
   matrix A;
   matrix_init(&A, 6, 6, sizeof(double));
   matrix_fill_smth(&A, 0.0);
@@ -93,37 +90,33 @@ vector* spline_2_0(vector *points, size_t index, vector *res) {
   matrix_val(&A, 0, 0) = pair_get(points, index).a * pair_get(points, index).a;
   matrix_val(&A, 0, 1) = pair_get(points, index).a;
   matrix_val(&A, 0, 2) = 1;
-  
-  matrix_val(&A, 1, 0) = pair_get(points, index + 1).a
-                       * pair_get(points, index + 1).a;
+
+  matrix_val(&A, 1, 0) =
+      pair_get(points, index + 1).a * pair_get(points, index + 1).a;
   matrix_val(&A, 1, 1) = pair_get(points, index + 1).a;
   matrix_val(&A, 1, 2) = 1;
-  
-  matrix_val(&A, 2, 3) = pair_get(points, index + 1).a
-                       * pair_get(points, index + 1).a;
+
+  matrix_val(&A, 2, 3) =
+      pair_get(points, index + 1).a * pair_get(points, index + 1).a;
   matrix_val(&A, 2, 4) = pair_get(points, index + 1).a;
   matrix_val(&A, 2, 5) = 1;
 
-  matrix_val(&A, 3, 3) = pair_get(points, index + 2).a
-                       * pair_get(points, index + 2).a;
+  matrix_val(&A, 3, 3) =
+      pair_get(points, index + 2).a * pair_get(points, index + 2).a;
   matrix_val(&A, 3, 4) = pair_get(points, index + 2).a;
   matrix_val(&A, 3, 5) = 1;
 
   matrix_val(&A, 4, 0) = 2 * pair_get(points, index).a;
   matrix_val(&A, 4, 1) = 1;
-  
+
   matrix_val(&A, 5, 3) = 2 * pair_get(points, index + 2).a;
   matrix_val(&A, 5, 4) = 1;
 
-  matrix_print(&A);
-  
   vector *ais = gauss(&A, &b);
 
-  vector_print(ais);
-  
   vector *normalized_1 = (vector *)malloc(sizeof(vector));
   vector *normalized_2 = (vector *)malloc(sizeof(vector));
-  
+
   vector_init(normalized_1, 3, sizeof(double));
   vector_init(normalized_2, 3, sizeof(double));
   for (size_t i = 0; i < 3; ++i) {
@@ -136,7 +129,6 @@ vector* spline_2_0(vector *points, size_t index, vector *res) {
   vector_push(res, normalized_1);
   vector_push(res, normalized_2);
 
-  
   vector_free(ais);
   free(ais);
 
@@ -146,7 +138,7 @@ vector* spline_2_0(vector *points, size_t index, vector *res) {
   return res;
 }
 
-vector* lagr_slae(vector *points) {  
+vector *lagr_slae(vector *points) {
   matrix V;
   matrix_init(&V, points->size, points->size, sizeof(double));
   for (size_t i = 0; i < points->size; ++i) {
@@ -162,7 +154,7 @@ vector* lagr_slae(vector *points) {
     vector_push(&y, &pair_get(points, i).b);
   }
   vector *res = gauss(&V, &y);
-  
+
   matrix_free(&V);
   vector_free(&y);
   return res;

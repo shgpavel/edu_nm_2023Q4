@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <math.h>
-#include <jemalloc/jemalloc.h>
-
-#include "vector.h"
 #include "matrix.h"
-#include "../common.h"
 
+#include <jemalloc/jemalloc.h>
+#include <math.h>
+#include <stdio.h>
+
+#include "../common.h"
+#include "vector.h"
 
 void matrix_init(matrix *m, size_t rows, size_t cols, size_t type_size) {
   m->rows = rows;
@@ -16,16 +16,14 @@ void matrix_init(matrix *m, size_t rows, size_t cols, size_t type_size) {
 
 void matrix_init_copy(matrix *dest, matrix *src) {
   if (src != NULL) {
-  dest->rows = src->rows;
-  dest->cols = src->cols;
-  dest->data = (vector *)malloc(sizeof(vector));
-  vector_init_copy(dest->data, src->data);
+    dest->rows = src->rows;
+    dest->cols = src->cols;
+    dest->data = (vector *)malloc(sizeof(vector));
+    vector_init_copy(dest->data, src->data);
   }
 }
 
-void matrix_push(matrix *m, void *data) {
-  vector_push(m->data, data);
-}
+void matrix_push(matrix *m, void *data) { vector_push(m->data, data); }
 
 void matrix_change(matrix *m, size_t row, size_t col, void *data) {
   if (row < m->rows && col < m->cols) {
@@ -46,7 +44,7 @@ void matrix_row_swap(matrix *m, size_t i, size_t j) {
   }
 }
 
-void* matrix_get(matrix *m, size_t row, size_t col) {
+void *matrix_get(matrix *m, size_t row, size_t col) {
   if ((row < m->rows) && (col < m->cols)) {
     return vector_get(m->data, row * m->cols + col);
   }
@@ -58,9 +56,9 @@ void matrix_delete(matrix *m, size_t i, size_t j) {
 }
 
 void matrix_free(matrix *m) {
-	vector_free(m->data);
-	free(m->data);
-	m->rows = 0;
+  vector_free(m->data);
+  free(m->data);
+  m->rows = 0;
   m->cols = 0;
 }
 
@@ -99,7 +97,7 @@ double matrix_norm_inf(matrix *a) {
   return norm_inf;
 }
 
-matrix* matrix_transpose(matrix *a) {
+matrix *matrix_transpose(matrix *a) {
   matrix *res = (matrix *)malloc(sizeof(matrix));
   matrix_init(res, a->cols, a->rows, a->data->type_size);
   for (size_t i = 0; i < res->rows; ++i) {
@@ -110,7 +108,7 @@ matrix* matrix_transpose(matrix *a) {
   return res;
 }
 
-vector* matrix_on_vector(matrix *a, vector *v) {
+vector *matrix_on_vector(matrix *a, vector *v) {
   if (v->size != a->cols) return NULL;
 
   vector *res = (vector *)malloc(sizeof(vector));
@@ -147,7 +145,7 @@ void matrix_normalize_vect(matrix *a, vector *v) {
   }
 }
 
-matrix* matrix_on_matrix(matrix *a, matrix *b) {
+matrix *matrix_on_matrix(matrix *a, matrix *b) {
   if (a->data->type_size != b->data->type_size || a->cols != b->rows) {
     return NULL;
   }
@@ -166,8 +164,8 @@ matrix* matrix_on_matrix(matrix *a, matrix *b) {
   return res;
 }
 
-matrix* matrix_inverse(matrix *m) {
-  if (m->cols != m->rows)  return NULL;
+matrix *matrix_inverse(matrix *m) {
+  if (m->cols != m->rows) return NULL;
   matrix *inv = (matrix *)malloc(sizeof(matrix));
   matrix_init(inv, m->rows, m->cols, sizeof(double));
 
@@ -201,6 +199,6 @@ matrix* matrix_inverse(matrix *m) {
       }
     }
   }
-  
+
   return inv;
 }
