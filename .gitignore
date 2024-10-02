@@ -1,7 +1,11 @@
 task_6/src/draw/node_modules/
 task_5/src/draw/node_modules/
+task_7/src/drafter2/quic_aux/
+task_7/src/drafter2/backend/js/
+task_7/src/drafter2/sample.js
 test/
 
 task_4/src/build
 task_5/src/build
 task_6/src/build
+task_7/src/build

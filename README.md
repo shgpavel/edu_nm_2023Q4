@@ -23,3 +23,7 @@ Interpolation methods using Lagrange and Newton polynomials, and splines
 
 ### task_6
 Least squares method (LSM) for function approximation
+
+### task_7
+Calculus of definite integral
+(Ready to use on release MT & x86 Intrinsics)

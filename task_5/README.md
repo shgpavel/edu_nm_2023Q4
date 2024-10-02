@@ -38,5 +38,11 @@
     libc math
 
 ## Build:
+	cd src/draw
+	npm install express
     make
     make clean
+
+## Start:
+	node src/draw/drawer.js
+	./build/main

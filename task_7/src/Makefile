@@ -1,15 +1,11 @@
-CFLAGS := -Wall -Wextra -Wconversion -Wformat -Wformat-security \
--O3 -std=c2x ${CFLAGS}
-# -fsanitize=address -fsanitize=undefined -O3 -std=c2x ${CFLAGS}
-
-LDFLAGS := -lm -ljemalloc -lcurl 
-# -fsanitize=address -fsanitize=undefined ${LDFLAGS}
+CFLAGS := -Wall -Wextra -O3 -std=c2x $(CFLAGS)
+LDFLAGS := -lm $(LDFLAGS)
 
 CC = clang
 LD = clang
 
 OUT_O_DIR = build
-SRCS_DIRS = . methods types draw
+SRCS_DIRS = . methods
 SRCS = $(wildcard $(addsuffix /*.c, $(SRCS_DIRS)))
 OBJS := $(addprefix $(OUT_O_DIR)/,$(SRCS:.c=.o))
 DEPS = $(OBJS:.o=.d)

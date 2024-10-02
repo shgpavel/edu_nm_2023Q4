@@ -34,6 +34,7 @@ enum errors {
   FUNCS_EMPTY
 };
 
+
 struct pair_char_pointers {
   char *a;
   char *b;
@@ -119,6 +120,7 @@ int main(void) {
             vector_free(vector_get(&funcs, i));
             free(vector_get(&funcs, i));
           }
+          free(funcs.data);
           f_allocated = 0;
         }
 
@@ -147,6 +149,7 @@ int main(void) {
             }
           }
           vector_push(&funcs, to_push_v);
+          free(to_push_v);
         }
         free(resp_cache);
         fclose(funcs_file);
@@ -182,16 +185,16 @@ int main(void) {
           continue;
         }
 
-        size_t flag = 0;
-        for (size_t i = 0; i < points.size; ++i) {
+        size_t xory = 0;
+        for (ssize_t i = 0; (size_t)i < points.size; ++i) {
           double to_push;
-          if (flag == 0) {
-            to_push = pair_get(&points, i).a;
+          if (xory == 0) {
+            to_push = pair_get(&points, (size_t)i).a;
           } else {
-            to_push = pair_get(&points, i).b;
+            to_push = pair_get(&points, (size_t)i).b;
           }
 
-          if (i != points.size - 1) {
+          if ((size_t)i != points.size - 1) {
             comp_file = fprintf(points_file, "%lg ", to_push);
           } else {
             comp_file = fprintf(points_file, "%lg\n", to_push);
@@ -202,8 +205,8 @@ int main(void) {
             break;
           }
 
-          if (i == points.size - 1 && flag == 0) {
-            flag = 1;
+          if ((size_t)i == points.size - 1 && xory == 0) {
+            xory = 1;
             i = -1;
           }
         }
@@ -282,7 +285,7 @@ int main(void) {
       }
 
       if (flag == 1) {
-        printf("Log: Interval %lg %lg\n", segm.a, segm.b);
+        printf("] Interval %lg %lg\n", segm.a, segm.b);
         interval_set = 1;
       } else if (flag == 2) {
         if (!p_allocated) {
@@ -290,7 +293,7 @@ int main(void) {
           p_allocated = 1;
         }
         vector_push(&points, &some);
-        printf("Log: Added x = %lg y = %lg\n", some.a, some.b);
+        printf("] Added x = %lg y = %lg\n", some.a, some.b);
       } else if (flag == 3) {
         const double tol = 1e-3;
         size_t is_found = 0;
@@ -299,7 +302,7 @@ int main(void) {
               fabs(pair_get(&points, i).b - some.b) < tol) {
             is_found = 1;
             vector_delete(&points, i);
-            printf("Log: Deleted x = %lg y = %lg\n", some.a, some.b);
+            printf("] Deleted x = %lg y = %lg\n", some.a, some.b);
             if (points.size <= 0) {
               vector_free(&points);
               p_allocated = 0;
@@ -352,7 +355,7 @@ int main(void) {
         }
       }
 
-      printf("Log: Added %zu points between %lg %lg\n", num_of_points, segm.a,
+      printf("] Added %zu points between %lg %lg\n", num_of_points, segm.a,
              segm.b);
     }
 
@@ -372,8 +375,9 @@ int main(void) {
     }
 
     else if (strstr(input, "plot")) {
+      // Maybe it should not be like that
       if (strstr(input, "clear")) {
-        continue;
+        goto plot_clear;
       }
       if (!f_allocated) {
         all_errors(FUNCS_EMPTY);
@@ -412,8 +416,10 @@ int main(void) {
           vector_free(vector_get(&funcs, i));
           free(vector_get(&funcs, i));
         }
+        free(funcs.data);
         f_allocated = 0;
       } else if (strstr(input, "plot")) {
+     plot_clear:
         clear_plot();
       }
     }
@@ -515,7 +521,13 @@ int main(void) {
       all_errors(INVALID_INPUT);
   }
   if (p_allocated) vector_free(&points);
-  if (f_allocated) vector_free(&funcs);
+  if (f_allocated) {
+    for (size_t i = 0; i < funcs.size; ++i) {
+      vector_free(vector_get(&funcs, i));
+      free(vector_get(&funcs, i));
+    }
+    free(funcs.data);
+  }
   free(input);
   return 0;
 }
