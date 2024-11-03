@@ -1,3 +1,5 @@
+> Moved to https://git.sr.ht/~shgpavel/edu_nm
+
 # Numerical Methods Repository
 
 Welcome to the Numerical Methods Repository!
